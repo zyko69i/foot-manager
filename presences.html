@@ -34,8 +34,16 @@
   th, td { padding:12px 16px; text-align:left; border-bottom:1px solid #eee; font-size:14px; }
   th { background:#f8f8fc; font-weight:600; color:#555; }
   tr:hover td { background:#fafafa; }
-  .check { width:44px; text-align:center; }
-  .check input { width:22px; height:22px; cursor:pointer; }
+  tr.absent-row td { background:#fdecea; }
+  tr.retard-row td { background:#fff4e5; }
+  .spinner { display:inline-flex; align-items:center; border:1px solid #ccc; border-radius:6px; overflow:hidden; background:#fff; }
+  .spinner button { width:36px; height:32px; border:none; background:#f0f0f0; font-size:16px; cursor:pointer; color:#333; }
+  .spinner button:hover { background:#e0e0e0; }
+  .spinner button:active { background:#d0d0d0; }
+  .spinner span { min-width:90px; text-align:center; font-size:13px; font-weight:600; }
+  .spinner .p { background:#c8e6c9; color:#1b5e20; }
+  .spinner .r { background:#ffe0b2; color:#e65100; }
+  .spinner .a { background:#ffcdd2; color:#b71c1c; }
   .status-ok { color:#2e7d32; font-weight:600; }
   .status-late { color:#e65100; font-weight:600; }
   .status-absent { color:#c62828; font-weight:600; }
@@ -47,7 +55,7 @@
   .stat-card.orange .num { color:#e65100; }
   .stat-card.red .num { color:#c62828; }
   .empty { text-align:center; padding:40px; color:#999; }
-  .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+  .warn { background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:14px; color:#856404; }
   @media (max-width:600px) { table { font-size:13px; } th, td { padding:10px 8px; } }
 </style>
 </head>
@@ -64,7 +72,7 @@
   <div class="sub">U6 à U18</div>
   <a href="matchs.html">Matchs</a>
   <a href="presences.html" class="active">Présences</a>
-  <a href="#" onclick="alert('Page à construire')">Convocations</a>
+  <a href="convocations.html">Convocations</a>
   <a href="#" onclick="alert('Page à construire')">Documents</a>
   <a href="#" onclick="alert('Page à construire')">Paramètres</a>
   <a href="export.html">Export</a>
@@ -79,11 +87,13 @@
     <button class="btn btn-primary" onclick="newSheet()">+ Nouvelle séance</button>
   </div>
   <div class="stats-row" id="stats"></div>
+  <div id="warnBox"></div>
   <div id="sheets"></div>
 </main>
 <script>
 const CATS = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
 const POSTES = ['Gardien','Défenseur central','Défenseur latéral droit','Défenseur latéral gauche','Milieu défensif','Milieu central','Milieu offensif','Ailier droit','Ailier gauche','Attaquant'];
+const CYCLE = ['present','retard','absent'];
 
 function load(k, fb){ try{ return JSON.parse(localStorage.getItem(k)) ?? fb; }catch(e){ return fb; } }
 function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
@@ -91,7 +101,6 @@ function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
 let players = load('fm_players', []);
 let sheets = load('fm_sheets', []);
 
-// Démo si vide
 if(!players.length){
   const demo = [];
   CATS.forEach((c,i)=>{
@@ -110,7 +119,7 @@ if(!sheets.length){
   sheets = s; save('fm_sheets', sheets);
 }
 
-const cf = document.getElementById('catFilter'), df = document.getElementById('dateFilter'), sh = document.getElementById('sheets'), st = document.getElementById('stats);
+const cf = document.getElementById('catFilter'), df = document.getElementById('dateFilter'), sh = document.getElementById('sheets'), st = document.getElementById('stats'), wb = document.getElementById('warnBox);
 CATS.forEach(c=>cf.add(new Option(c,c)));
 df.value = new Date().toISOString().slice(0,10);
 
@@ -125,9 +134,11 @@ function newSheet(){
   save('fm_sheets', sheets); render();
 }
 
-function setStatut(sid, pid, stt){
+function cycleStatut(sid, pid){
   const sh = sheets.find(s=>s.id===sid); if(!sh) return;
-  const j = sh.joueurs.find(x=>x.id===pid); if(j) j.statut = stt;
+  const j = sh.joueurs.find(x=>x.id===pid); if(!j) return;
+  const i = CYCLE.indexOf(j.statut);
+  j.statut = CYCLE[(i+1)%CYCLE.length];
   save('fm_sheets', sheets); render();
 }
 
@@ -139,7 +150,6 @@ function render(){
   if(cat) list = list.filter(s=>s.categorie===cat);
   if(date) list = list.filter(s=>s.date===date);
 
-  // Stats globales
   let tot=0, pre=0, ret=0, abs=0;
   sheets.forEach(s=>s.joueurs.forEach(j=>{tot++; if(j.statut==='present')pre++; else if(j.statut==='retard')ret++; else abs++;}));
   st.innerHTML = `
@@ -148,6 +158,16 @@ function render(){
     <div class="stat-card orange"><div class="num">${ret}</div><div class="label">Retards</div></div>
     <div class="stat-card red"><div class="num">${abs}</div><div class="label">Absents</div></div>`;
 
+  // Alerte absents récents
+  const recentAbs = sheets.filter(s=>{
+    const d = new Date(s.date); const now = new Date(); return (now-d)/(86400000) <= 14;
+  }).reduce((acc,s)=>{
+    s.joueurs.forEach(j=>{ if(j.statut==='absent'){ if(!acc[j.id]) acc[j.id]=0; acc[j.id]+=s.titre.toLowerCase().includes('entraînement')?1:0; } });
+    return acc;
+  }, {});
+  const absTrain = Object.entries(recentAbs).filter(([,n])=>n>=2).map(([id])=>players.find(p=>p.id===id)).filter(Boolean);
+  wb.innerHTML = absTrain.length ? `<div class="warn">⚠️ ${absTrain.length} joueur(s) absent(s) à 2 entraînements ou plus sur les 14 derniers jours : ${absTrain.map(p=>p.prenom+' '+p.nom).join(', ')}. À ne pas convoquer pour le prochain match.</div>` : '';
+
   if(!list.length){ sh.innerHTML = '<div class="empty">Aucune feuille pour ces critères.</div>'; return; }
   sh.innerHTML = '';
   list.forEach(s=>{
@@ -155,17 +175,24 @@ function render(){
     const head = document.createElement('div'); head.className='sheet-head';
     head.innerHTML = `<div><h3>${s.titre}</h3><div class="meta">${s.categorie} — ${s.date}</div></div><button class="btn btn-secondary" onclick="delSheet('${s.id}')">Supprimer</button>`;
     box.appendChild(head);
-    const tbl = document.createElement('table'); tbl.innerHTML = '<tr><th class="check">Présent</th><th class="check">Retard</th><th class="check">Absent</th><th>Joueur</th><th>Maillot</th><th>Statut fiche</th></tr>';
+    const tbl = document.createElement('table'); tbl.innerHTML = '<tr><th>Présence</th><th>Joueur</th><th>Maillot</th><th>Statut fiche</th><th>Entraînement récent</th></tr>';
     s.joueurs.forEach(j=>{
       const p = players.find(x=>x.id===j.id); if(!p) return;
-      const tr = document.createElement('tr');
+      const tr = document.createElement('tr);
+      if(j.statut==='absent') tr.className='absent-row';
+      else if(j.statut==='retard') tr.className='retard-row';
+      const label = j.statut==='present'?'Présent':j.statut==='retard'?'Retard':'Absent';
+      const cls = j.statut==='present'?'p':j.statut==='retard'?'r':'a';
+      // Présences récentes du joueur
+      const recent = sheets.filter(sh=>sh.categorie===s.categorie && sh.date < s.date).slice(0,3).map(sh=>{
+        const jj = sh.joueurs.find(x=>x.id===j.id); return jj ? (jj.statut==='present'?'✓':jj.statut==='retard'?'~':'✗') : '?';
+      }).join(' ');
       tr.innerHTML = `
-        <td class="check"><input type="radio" name="st${s.id}${j.id}" ${j.statut==='present'?'checked':''} onclick="setStatut('${s.id}','${j.id}','present')"></td>
-        <td class="check"><input type="radio" name="st${s.id}${j.id}" ${j.statut==='retard'?'checked':''} onclick="setStatut('${s.id}','${j.id}','retard')"></td>
-        <td class="check"><input type="radio" name="st${s.id}${j.id}" ${j.statut==='absent'?'checked':''} onclick="setStatut('${s.id}','${j.id}','absent')"></td>
+        <td><div class="spinner"><button onclick="cycleStatut('${s.id}','${j.id}')">↻</button><span class="${cls}">${label}</span><button onclick="cycleStatut('${s.id}','${j.id}')">↻</button></div></td>
         <td><a href="joueur.html?id=${j.id}">${p.prenom} ${p.nom}</a></td>
         <td>${p.maillot||'—'}</td>
-        <td class="status-${p.statut==='actif'?'ok':p.statut==='blesse'?'late':'absent'}">${p.statut}</td>`;
+        <td class="status-${p.statut==='actif'?'ok':p.statut==='blesse'?'late':'absent'}">${p.statut}</td>
+        <td style="font-size:15px;letter-spacing:4px">${recent||'—'}</td>`;
       tbl.appendChild(tr);
     });
     box.appendChild(tbl);
