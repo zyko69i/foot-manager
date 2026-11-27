@@ -3,19 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Foot Manager — Export PDF</title>
+<title>Foot Manager — Export</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
-  body { background:#f4f6f8; color:#1a2332; }
-  header { background:#0f2744; color:#fff; height:56px; display:flex; align-items:center; padding:0 16px; }
-  .logo { font-weight:700; font-size:18px; letter-spacing:1px; }
-  main { max-width:900px; margin:0 auto; padding:20px 16px 60px; }
-  h1 { font-size:22px; margin-bottom:6px; }
-  .sub { color:#6b7c93; font-size:13px; margin-bottom:20px; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+  body { background:#f4f6f8; color:#1a1a2e; }
+  header { background:#1a1a2e; color:#fff; padding:14px 16px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:50; }
+  .burger { background:none; border:none; color:#fff; font-size:22px; cursor:pointer; }
+  header h1 { font-size:18px; font-weight:600; }
+  nav { position:fixed; top:0; left:-280px; width:280px; height:100vh; background:#1a1a2e; color:#fff; padding:20px 16px; transition:left .25s; z-index:100; overflow-y:auto; }
+  nav.open { left:0; }
+  nav .close { background:none; border:none; color:#fff; font-size:20px; float:right; cursor:pointer; }
+  nav a { display:block; color:#cbd5e1; text-decoration:none; padding:10px 8px; border-radius:6px; font-size:15px; }
+  nav a:hover { background:#2d2d44; color:#fff; }
+  nav .sub { padding-left:20px; font-size:13px; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:90; }
+  .overlay.open { display:block; }
+  main { max-width:900px; margin:0 auto; padding:16px; }
   .card { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); margin-bottom:16px; }
-  .card h2 { font-size:14px; text-transform:uppercase; letter-spacing:1px; color:#0f2744; margin-bottom:12px; border-bottom:2px solid #3d9cf0; padding-bottom:6px; }
-  label { display:block; font-size:12px; color:#6b7c93; margin:10px 0 4px; font-weight:600; }
-  input, select, textarea { width:100%; padding:10px 12px; border:1px solid #d5dde8; border-radius:8px; font-size:14px; background:#fafbfc; }
+  .card h2 { font-size:14px; text-transform:uppercase; letter-spacing:1px; color:#1a1a2e; margin-bottom:12px; border-bottom:2px solid #3d9cf0; padding-bottom:6px; }
+  label { display:block; font-size:12px; color:#64748b; margin:10px 0 4px; font-weight:600; }
+  input, select, textarea { width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fafbfc; }
   textarea { min-height:70px; resize:vertical; }
   .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
   .check { display:flex; align-items:center; gap:8px; font-size:13px; margin:6px 0; }
@@ -25,150 +32,338 @@
   .btn-pdf { background:#3d9cf0; color:#fff; }
   .btn-pdf:hover { background:#2b84d6; }
   .btn-print { background:#2e9e5b; color:#fff; }
-  .btn-back { background:#e2e8f0; color:#1a2332; }
+  .btn-back { background:#e2e8f0; color:#1a1a2e; }
   .doc-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eef1f5; font-size:13px; }
-  .doc-item .type { font-weight:600; color:#0f2744; }
-  .preview { border:1px dashed #c9d6e3; border-radius:8px; padding:16px; background:#fafbfc; margin-top:12px; font-size:13px; color:#6b7c93; }
+  .doc-item .type { font-weight:600; color:#1a1a2e; }
+  .preview { border:1px dashed #c9d6e3; border-radius:8px; padding:16px; background:#fafbfc; margin-top:12px; font-size:13px; color:#64748b; }
   .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
-  .badge.ok { background:#d9f2e6; color:#2e9e5b; }
-  .badge.att { background:#fde8d0; color:#e67e22; }
-  .badge.manq { background:#fbd9d5; color:#c0392b; }
-  @media print { header, .btns, .no-print { display:none !important; } body { background:#fff; } main { padding:0; max-width:none; } .card { box-shadow:none; border:1px solid #ddd; } }
+  .badge.ok { background:#dcfce7; color:#166534; }
+  .badge.att { background:#fef9c3; color:#854d0e; }
+  .badge.manq { background:#fee2e2; color:#991b1b; }
+  .player-list { max-height:200px; overflow-y:auto; border:1px solid #cbd5e1; border-radius:8px; padding:8px; }
+  .player-list label { margin:4px 0; font-weight:400; color:#1a1a2e; font-size:13px; }
+  .mode-tabs { display:flex; gap:8px; margin-bottom:12px; }
+  .mode-tabs button { flex:1; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; color:#64748b; font-weight:600; }
+  .mode-tabs button.active { background:#1a1a2e; color:#fff; border-color:#1a1a2e; }
+  @media print { header, .btns, .no-print, .mode-tabs { display:none !important; } body { background:#fff; } main { padding:0; max-width:none; } .card { box-shadow:none; border:1px solid #ddd; } }
 </style>
 </head>
 <body>
-<header><div class="logo">FOOT MANAGER — EXPORT</div></header>
+<header>
+  <button class="burger" onclick="toggleNav()">☰</button>
+  <h1>Export</h1>
+</header>
+<nav id="nav">
+  <button class="close" onclick="toggleNav()">✕</button>
+  <a href="index.html">Tableau de bord</a>
+  <a href="categories.html">Catégories</a>
+  <div class="sub">
+    <a href="categorie.html?cat=U6">U6</a><a href="categorie.html?cat=U7">U7</a><a href="categorie.html?cat=U8">U8</a><a href="categorie.html?cat=U9">U9</a><a href="categorie.html?cat=U10">U10</a><a href="categorie.html?cat=U11">U11</a><a href="categorie.html?cat=U12">U12</a><a href="categorie.html?cat=U13">U13</a><a href="categorie.html?cat=U14">U14</a><a href="categorie.html?cat=U15">U15</a><a href="categorie.html?cat=U16">U16</a><a href="categorie.html?cat=U17">U17</a><a href="categorie.html?cat=U18">U18</a>
+  </div>
+  <a href="matchs.html">Matchs</a>
+  <a href="presences.html">Présences</a>
+  <a href="convocations.html">Convocations</a>
+  <a href="documents.html">Documents</a>
+  <a href="parametres.html">Paramètres</a>
+  <a href="export.html" style="background:#2d2d44;color:#fff">Export</a>
+</nav>
+<div class="overlay" id="overlay" onclick="toggleNav()"></div>
 <main>
-  <h1>Fiche récapitulative joueur</h1>
-  <div class="sub">Génère un PDF imprimable ou transmissible à la fédération. Les documents originaux ne sont jamais supprimés.</div>
-
-  <div class="card">
-    <h2>1. Sélection du joueur</h2>
-    <label>Joueur</label>
-    <select id="player-select" onchange="loadPlayer()"></select>
+  <div class="mode-tabs">
+    <button class="active" onclick="setMode('un')">Un joueur</button>
+    <button onclick="setMode('multi')">Plusieurs joueurs</button>
+    <button onclick="setMode('donnees')">Données globales</button>
   </div>
 
-  <div class="card" id="bloc1">
-    <h2>Bloc 1 — Identité et profil</h2>
-    <div class="row">
-      <div><label>Nom</label><input id="e-nom" readonly></div>
-      <div><label>Prénom</label><input id="e-prenom" readonly></div>
-      <div><label>Date de naissance</label><input id="e-dnaiss" readonly></div>
-      <div><label>Lieu de naissance</label><input id="e-lnaiss" readonly></div>
-      <div><label>Catégorie</label><input id="e-cat" readonly></div>
-      <div><label>Sexe</label><input id="e-sexe" readonly></div>
+  <div id="mode-un">
+    <div class="card">
+      <h2>1. Sélection du joueur</h2>
+      <label>Joueur</label>
+      <select id="player-select" onchange="loadPlayer()"></select>
     </div>
-    <label>Adresse</label><input id="e-adresse" readonly>
-  </div>
-
-  <div class="card" id="bloc2">
-    <h2>Bloc 2 — Parents et responsables</h2>
-    <div id="e-parents"></div>
-  </div>
-
-  <div class="card" id="bloc3">
-    <h2>Bloc 3 — Licence et administratif</h2>
-    <div class="row">
-      <div><label>Numéro de licence</label><input id="e-licence" readonly></div>
-      <div><label>Date de validité</label><input id="e-validite" readonly></div>
-      <div><label>Statut</label><input id="e-statut-lic" readonly></div>
+    <div class="card" id="bloc1">
+      <h2>Bloc 1 — Identité et profil</h2>
+      <div class="row">
+        <div><label>Nom</label><input id="e-nom" readonly></div>
+        <div><label>Prénom</label><input id="e-prenom" readonly></div>
+        <div><label>Date de naissance</label><input id="e-dnaiss" readonly></div>
+        <div><label>Lieu de naissance</label><input id="e-lnaiss" readonly></div>
+        <div><label>Catégorie</label><input id="e-cat" readonly></div>
+        <div><label>Sexe</label><input id="e-sexe" readonly></div>
+      </div>
+      <label>Adresse</label><input id="e-adresse" readonly>
+    </div>
+    <div class="card" id="bloc2">
+      <h2>Bloc 2 — Parents et responsables</h2>
+      <div id="e-parents"></div>
+    </div>
+    <div class="card" id="bloc3">
+      <h2>Bloc 3 — Licence et administratif</h2>
+      <div class="row">
+        <div><label>Numéro de licence</label><input id="e-licence" readonly></div>
+        <div><label>Date de validité</label><input id="e-validite" readonly></div>
+        <div><label>Statut</label><input id="e-statut-lic" readonly></div>
+      </div>
+    </div>
+    <div class="card" id="bloc4">
+      <h2>Bloc 4 — Informations sportives</h2>
+      <div class="row">
+        <div><label>Numéro de maillot</label><input id="e-maillot" readonly></div>
+        <div><label>Postes</label><input id="e-postes" readonly></div>
+        <div><label>Poste préféré</label><input id="e-pref" readonly></div>
+      </div>
+    </div>
+    <div class="card" id="bloc5">
+      <h2>Bloc 5 — Santé et sécurité</h2>
+      <label>Allergies</label><textarea id="e-allergies" readonly></textarea>
+      <label>Consignes d'urgence</label><textarea id="e-consignes" readonly></textarea>
+      <div class="row">
+        <div><label>Contact d'urgence</label><input id="e-contact" readonly></div>
+        <div><label>Téléphone 2 (facultatif)</label><input id="e-tel2" readonly></div>
+      </div>
+    </div>
+    <div class="card" id="bloc6">
+      <h2>Bloc 6 — Présences (automatique)</h2>
+      <div id="e-presences"></div>
+    </div>
+    <div class="card" id="bloc7">
+      <h2>Bloc 7 — Matchs et convocations (automatique)</h2>
+      <div id="e-matchs"></div>
+      <div class="row" style="margin-top:10px">
+        <div><label>Convocations sur l'année</label><input id="e-convos" readonly></div>
+        <div><label>Matchs joués</label><input id="e-joues" readonly></div>
+        <div><label>Temps de jeu total</label><input id="e-temps" readonly></div>
+      </div>
+    </div>
+    <div class="card" id="bloc8">
+      <h2>Bloc 8 — Documents et autorisations</h2>
+      <div id="e-docs"></div>
+      <div class="row" style="margin-top:10px">
+        <div><label>Rendez-vous médical</label><span id="e-rdv" class="badge"></span></div>
+      </div>
+    </div>
+    <div class="card" id="bloc9">
+      <h2>Bloc 9 — Historique et observations</h2>
+      <div id="e-notes"></div>
+      <div id="e-historique"></div>
     </div>
   </div>
 
-  <div class="card" id="bloc4">
-    <h2>Bloc 4 — Informations sportives</h2>
-    <div class="row">
-      <div><label>Numéro de maillot</label><input id="e-maillot" readonly></div>
-      <div><label>Postes</label><input id="e-postes" readonly></div>
-      <div><label>Poste préféré</label><input id="e-pref" readonly></div>
+  <div id="mode-multi" style="display:none">
+    <div class="card">
+      <h2>Sélection multiple</h2>
+      <label>Catégorie</label>
+      <select id="multi-cat" onchange="renderMulti()"><option value="">Toutes</option></select>
+      <label style="margin-top:10px">Joueurs à exporter</label>
+      <div class="player-list" id="multi-list"></div>
+      <div class="btns">
+        <button class="btn-pdf" onclick="genererMulti()">Générer le PDF multi-joueurs</button>
+        <button class="btn-print" onclick="window.print()">Imprimer</button>
+      </div>
     </div>
   </div>
 
-  <div class="card" id="bloc5">
-    <h2>Bloc 5 — Santé et sécurité</h2>
-    <label>Allergies</label><textarea id="e-allergies" readonly></textarea>
-    <label>Consignes d'urgence</label><textarea id="e-consignes" readonly></textarea>
-    <div class="row">
-      <div><label>Contact d'urgence</label><input id="e-contact" readonly></div>
-      <div><label>Téléphone 2 (facultatif)</label><input id="e-tel2" readonly></div>
-    </div>
-  </div>
-
-  <div class="card" id="bloc8">
-    <h2>Bloc 8 — Documents et autorisations</h2>
-    <div id="e-docs"></div>
-    <div class="row" style="margin-top:10px">
-      <div><label>Rendez-vous médical</label><span id="e-rdv" class="badge"></span></div>
+  <div id="mode-donnees" style="display:none">
+    <div class="card">
+      <h2>Export de données</h2>
+      <div class="check"><input type="checkbox" id="ex-joueurs" checked> Liste des joueurs</div>
+      <div class="check"><input type="checkbox" id="ex-matchs" checked> Matchs et résultats</div>
+      <div class="check"><input type="checkbox" id="ex-presences" checked> Présences</div>
+      <div class="check"><input type="checkbox" id="ex-convocations" checked> Convocations</div>
+      <div class="check"><input type="checkbox" id="ex-documents" checked> Inventaire des documents</div>
+      <div class="btns">
+        <button class="btn-pdf" onclick="genererDonnees()">Générer</button>
+        <button class="btn-print" onclick="window.print()">Imprimer</button>
+      </div>
+      <div class="preview">Exporte un récapitulatif des données sélectionnées, sans les fichiers originaux.</div>
     </div>
   </div>
 
   <div class="card no-print">
-    <h2>Pièces à inclure dans le PDF</h2>
+    <h2>Pièces à inclure (mode joueur)</h2>
     <div class="check"><input type="checkbox" id="inc-identite" checked> Identité et profil</div>
     <div class="check"><input type="checkbox" id="inc-parents" checked> Parents et responsables</div>
     <div class="check"><input type="checkbox" id="inc-licence" checked> Licence et administratif</div>
     <div class="check"><input type="checkbox" id="inc-sportif" checked> Informations sportives</div>
     <div class="check"><input type="checkbox" id="inc-sante" checked> Santé et sécurité</div>
+    <div class="check"><input type="checkbox" id="inc-presences" checked> Présences</div>
+    <div class="check"><input type="checkbox" id="inc-matchs" checked> Matchs et convocations</div>
     <div class="check"><input type="checkbox" id="inc-docs" checked> Documents joints (originaux conservés)</div>
+    <div class="check"><input type="checkbox" id="inc-notes" checked> Notes et historique</div>
     <div class="btns">
       <button class="btn-pdf" onclick="genererPDF()">Générer le PDF</button>
       <button class="btn-print" onclick="window.print()">Imprimer</button>
       <button class="btn-back" onclick="location.href='index.html'">Retour tableau de bord</button>
     </div>
-    <div class="preview">Aperçu : le PDF regroupe les blocs cochés ci-dessus. Extensible plus tard aux convocations, présences et matchs.</div>
+    <div class="preview">Le PDF regroupe les blocs cochés. Les documents originaux restent dans le dossier du joueur, ils ne sont jamais supprimés.</div>
   </div>
 </main>
 <script>
-function load(k,fb){try{return JSON.parse(localStorage.getItem('fm.'+k))??fb;}catch(e){return fb;}}
-let players=load('players',[]);
-const sel=document.getElementById('player-select');
-players.forEach(p=>{
-  const o=document.createElement('option'); o.value=p.id; o.textContent=p.prenom+' '+p.nom+' ('+p.cat+')'; sel.appendChild(o);
-});
-function loadPlayer(){
-  const p=players.find(x=>x.id==sel.value);
-  if(!p)return;
-  document.getElementById('e-nom').value=p.nom;
-  document.getElementById('e-prenom').value=p.prenom;
-  document.getElementById('e-dnaiss').value=p.dnaiss||'';
-  document.getElementById('e-lnaiss').value=p.lnaiss||'';
-  document.getElementById('e-cat').value=p.cat;
-  document.getElementById('e-sexe').value=p.sexe||'';
-  document.getElementById('e-adresse').value=p.adresse||'';
-  const parents=load('parents',{});
-  const pr=parents[p.id]||[];
-  document.getElementById('e-parents').innerHTML=pr.length?pr.map(r=>`<div class="row" style="margin-bottom:8px"><div><label>Nom</label><input value="${r.nom||''}" readonly></div><div><label>Lien</label><input value="${r.lien||''}" readonly></div><div><label>Téléphone</label><input value="${r.tel||''}" readonly></div><div><label>E-mail</label><input value="${r.email||''}" readonly></div></div>`).join(''):'<div style="color:#6b7c93;font-size:13px">Aucun responsable renseigné.</div>';
-  document.getElementById('e-licence').value=p.licence||'';
-  document.getElementById('e-validite').value=p.licenceValidite||'';
-  document.getElementById('e-statut-lic').value=p.licenceStatut||'';
-  document.getElementById('e-maillot').value=p.maillot||'';
-  document.getElementById('e-postes').value=(p.poste||[]).join(', ');
-  document.getElementById('e-pref').value=p.postePref||'';
-  document.getElementById('e-allergies').value=p.allergies||'';
-  document.getElementById('e-consignes').value=p.consignes||'';
-  document.getElementById('e-contact').value=p.contactUrgence||'';
-  document.getElementById('e-tel2').value=p.tel2||'';
-  const docs=load('docs',{});
-  const dj=docs[p.id]||[];
-  document.getElementById('e-docs').innerHTML=dj.length?dj.map(d=>`<div class="doc-item"><span class="type">${d.type}</span><span>${d.nom}</span></div>`).join(''):'<div style="color:#6b7c93;font-size:13px">Aucun document.</div>';
-  const rdv=p.rdvMedical||'à prévoir';
-  const b=document.getElementById('e-rdv'); b.textContent=rdv; b.className='badge '+(rdv==='effectué'?'ok':rdv==='en attente'?'att':'manq);
+let db = JSON.parse(localStorage.getItem('footmanager') || '{"joueurs":[],"matchs":[],"presences":{},"documents":[],"parametres":{}});
+if (!db.joueurs) db.joueurs = [];
+if (!db.matchs) db.matchs = [];
+if (!db.presences) db.presences = {};
+if (!db.documents) db.documents = [];
+if (!db.parametres) db.parametres = {};
+
+const CAT = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
+CAT.forEach(c => document.getElementById('multi-cat').innerHTML += `<option value="${c}">${c}</option>`);
+
+function toggleNav() {
+  document.getElementById('nav').classList.toggle('open);
+  document.getElementById('overlay').classList.toggle('open);
 }
-if(players.length){sel.value=players[0].id; loadPlayer();}
-function genererPDF(){
-  const p=players.find(x=>x.id==sel.value);
-  if(!p)return;
-  const w=window.open('','PRINT','width=800,height=900');
-  let html='<html><head><title>Fiche '+p.prenom+' '+p.nom+'</title><style>body{font-family:sans-serif;padding:20px}h1{font-size:20px}h2{font-size:14px;color:#0f2744;border-bottom:1px solid #ccc;margin-top:16px}table{width:100%;border-collapse:collapse;font-size:13px}td{padding:4px 8px;border-bottom:1px solid #eee}</style></head><body>';
-  html+='<h1>FICHE JOUEUR — '+p.prenom+' '+p.nom+'</h1>';
-  if(document.getElementById('inc-identite').checked){html+='<h2>Identité</h2><table><tr><td>Nom</td><td>'+p.nom+'</td><td>Prénom</td><td>'+p.prenom+'</td></tr><tr><td>Naissance</td><td>'+(p.dnaiss||'')+'</td><td>Lieu</td><td>'+(p.lnaiss||'')+'</td></tr><tr><td>Catégorie</td><td>'+p.cat+'</td><td>Sexe</td><td>'+(p.sexe||'')+'</td></tr><tr><td>Adresse</td><td colspan="3">'+(p.adresse||'')+'</td></tr></table>';}
-  if(document.getElementById('inc-parents').checked){const pr=load('parents',{})[p.id]||[]; html+='<h2>Parents et responsables</h2>'+(pr.length?pr.map(r=>'<table><tr><td>'+r.nom+'</td><td>'+r.lien+'</td><td>'+r.tel+'</td><td>'+r.email+'</td></tr></table>').join(''):'Aucun.');}
-  if(document.getElementById('inc-licence').checked){html+='<h2>Licence</h2><table><tr><td>N° '+ (p.licence||'') +'</td><td>Validité '+ (p.licenceValidite||'') +'</td><td>Statut '+ (p.licenceStatut||'') +'</td></tr></table>';}
-  if(document.getElementById('inc-sportif').checked){html+='<h2>Sportif</h2><table><tr><td>Maillot '+ (p.maillot||'') +'</td><td>Postes '+ (p.poste||[]).join(', ') +'</td><td>Préféré '+ (p.postePref||'') +'</td></tr></table>';}
-  if(document.getElementById('inc-sante').checked){html+='<h2>Santé</h2><table><tr><td>Allergies</td><td>'+(p.allergies||'')+'</td></tr><tr><td>Consignes</td><td>'+(p.consignes||'')+'</td></tr><tr><td>Contact urgence</td><td>'+(p.contactUrgence||'')+'</td></tr></table>';}
-  if(document.getElementById('inc-docs').checked){const dj=load('docs',{})[p.id]||[]; html+='<h2>Documents</h2>'+(dj.length?dj.map(d=>'<div>'+d.type+' — '+d.nom+'</div>').join(''):'Aucun. Les originaux restent dans le dossier du joueur.');}
-  html+='<p style="margin-top:20px;font-size:11px;color:#888">Généré par Foot Manager le '+new Date().toLocaleDateString('fr-FR')+'. Document à usage club / fédération.</p></body></html>';
-  w.document.write(html); w.document.close(); w.focus(); setTimeout(()=>w.print(),400);
+
+function setMode(m) {
+  document.querySelectorAll('.mode-tabs button').forEach((b,i) => b.classList.toggle('active', (m==='un'&&i===0)||(m==='multi'&&i===1)||(m==='donnees'&&i===2)));
+  document.getElementById('mode-un').style.display = m==='un'?'block':'none';
+  document.getElementById('mode-multi').style.display = m==='multi'?'block':'none';
+  document.getElementById('mode-donnees').style.display = m==='donnees'?'block':'none';
+  if (m==='multi') renderMulti();
+}
+
+const sel = document.getElementById('player-select);
+db.joueurs.forEach(p => {
+  const o = document.createElement('option'); o.value = p.id; o.textContent = p.prenom + ' ' + p.nom + ' (' + p.cat + ')'; sel.appendChild(o);
+});
+
+function loadPlayer() {
+  const p = db.joueurs.find(x => x.id == sel.value);
+  if (!p) return;
+  document.getElementById('e-nom').value = p.nom;
+  document.getElementById('e-prenom').value = p.prenom;
+  document.getElementById('e-dnaiss').value = p.dnaiss || '';
+  document.getElementById('e-lnaiss').value = p.lnaiss || '';
+  document.getElementById('e-cat').value = p.cat;
+  document.getElementById('e-sexe').value = p.sexe || '';
+  document.getElementById('e-adresse').value = [p.rue, p.cp, p.ville].filter(Boolean).join(' ');
+  const pr = p.parents || [];
+  document.getElementById('e-parents').innerHTML = pr.length ? pr.map(r => `<div class="row" style="margin-bottom:8px"><div><label>Nom</label><input value="${r.nom||''}" readonly></div><div><label>Lien</label><input value="${r.lien||''}" readonly></div><div><label>Téléphone</label><input value="${r.tel||''}" readonly></div><div><label>E-mail</label><input value="${r.email||''}" readonly></div></div>`).join('') : '<div style="color:#94a3b8;font-size:13px">Aucun responsable renseigné.</div>';
+  document.getElementById('e-licence').value = p.licence || '';
+  document.getElementById('e-validite').value = p.licenceValidite || '';
+  document.getElementById('e-statut-lic').value = p.licenceStatut || '';
+  document.getElementById('e-maillot').value = p.maillot || '';
+  document.getElementById('e-postes').value = (p.postes || []).join(', ');
+  document.getElementById('e-pref').value = p.postePref || '';
+  document.getElementById('e-allergies').value = p.allergies || '';
+  document.getElementById('e-consignes').value = p.consignes || '';
+  document.getElementById('e-contact').value = p.contactUrgence || '';
+  document.getElementById('e-tel2').value = p.tel2 || '';
+  // Présences auto
+  let totP = 0, totR = 0, totA = 0;
+  Object.values(db.presences).forEach(feuille => {
+    const e = (feuille.joueurs || {})[p.id];
+    if (!e) return;
+    if (e === 'present') totP++;
+    else if (e === 'retard') totR++;
+    else if (e === 'absent') totA++;
+  });
+  document.getElementById('e-presences').innerHTML = `<div class="row"><div><label>Présents</label><input value="${totP}" readonly></div><div><label>Retards</label><input value="${totR}" readonly></div><div><label>Absents</label><input value="${totA}" readonly></div></div>`;
+  // Matchs auto
+  let convos = 0, joues = 0, temps = 0;
+  (db.matchs || []).forEach(m => {
+    const c = (m.convocations || {})[p.id];
+    if (c && c.convoque) { convos++; if (c.joue) { joues++; temps += parseInt(c.minutes) || 0; } }
+  });
+  document.getElementById('e-convos').value = convos;
+  document.getElementById('e-joues').value = joues;
+  document.getElementById('e-temps').value = temps + ' min';
+  const dj = db.documents.filter(d => d.joueurId === p.id);
+  document.getElementById('e-docs').innerHTML = dj.length ? dj.map(d => `<div class="doc-item"><span class="type">${d.type}</span><span>${d.dateAjout || ''}</span></div>`).join('') : '<div style="color:#94a3b8;font-size:13px">Aucun document.</div>';
+  const rdv = p.rdvMedical || 'à prévoir';
+  const b = document.getElementById('e-rdv'); b.textContent = rdv; b.className = 'badge ' + (rdv === 'fait' ? 'ok' : rdv === 'attente' ? 'att' : 'manq);
+  document.getElementById('e-notes').innerHTML = p.notes ? `<textarea readonly>${p.notes}</textarea>` : '<div style="color:#94a3b8;font-size:13px">Aucune note.</div>';
+  const hist = p.historique || [];
+  document.getElementById('e-historique').innerHTML = hist.length ? hist.map(h => `<div style="font-size:12px;color:#64748b;padding:4px 0;border-bottom:1px solid #f1f5f9">${h}</div>`).join('') : '<div style="color:#94a3b8;font-size:13px">Aucun historique.</div>';
+}
+if (db.joueurs.length) { sel.value = db.joueurs[0].id; loadPlayer(); }
+
+function renderMulti() {
+  const cat = document.getElementById('multi-cat').value;
+  let list = db.joueurs;
+  if (cat) list = list.filter(j => j.cat === cat);
+  document.getElementById('multi-list').innerHTML = list.map(j => `<label><input type="checkbox" class="multi-cb" value="${j.id}"> ${j.prenom} ${j.nom} (${j.cat})</label>`).join('');
+}
+
+function buildHTML(titre, blocs) {
+  let html = '<html><head><title>' + titre + '</title><style>body{font-family:sans-serif;padding:20px}h1{font-size:20px}h2{font-size:14px;color:#1a1a2e;border-bottom:1px solid #ccc;margin-top:16px}table{width:100%;border-collapse:collapse;font-size:13px}td{padding:4px 8px;border-bottom:1px solid #eee}</style></head><body>';
+  html += '<h1>' + titre + '</h1>';
+  html += blocs;
+  html += '<p style="margin-top:20px;font-size:11px;color:#888">Généré par Foot Manager le ' + new Date().toLocaleDateString('fr-FR') + '. Document à usage club / fédération. Les originaux restent dans le dossier.</p></body></html>';
+  return html;
+}
+
+function openPrint(html) {
+  const w = window.open('', 'PRINT', 'width=800,height=900);
+  w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 400);
+}
+
+function genererPDF() {
+  const p = db.joueurs.find(x => x.id == sel.value);
+  if (!p) return;
+  let blocs = '';
+  if (document.getElementById('inc-identite').checked) blocs += '<h2>Identité</h2><table><tr><td>Nom</td><td>' + p.nom + '</td><td>Prénom</td><td>' + p.prenom + '</td></tr><tr><td>Naissance</td><td>' + (p.dnaiss||'') + '</td><td>Lieu</td><td>' + (p.lnaiss||'') + '</td></tr><tr><td>Catégorie</td><td>' + p.cat + '</td><td>Sexe</td><td>' + (p.sexe||'') + '</td></tr><tr><td>Adresse</td><td colspan="3">' + [p.rue,p.cp,p.ville].filter(Boolean).join(' ') + '</td></tr></table>';
+  if (document.getElementById('inc-parents').checked) { const pr = p.parents||[]; blocs += '<h2>Parents et responsables</h2>' + (pr.length ? pr.map(r => '<table><tr><td>' + r.nom + '</td><td>' + r.lien + '</td><td>' + r.tel + '</td><td>' + r.email + '</td></tr></table>').join('') : 'Aucun.'); }
+  if (document.getElementById('inc-licence').checked) blocs += '<h2>Licence</h2><table><tr><td>N° ' + (p.licence||'') + '</td><td>Validité ' + (p.licenceValidite||'') + '</td><td>Statut ' + (p.licenceStatut||'') + '</td></tr></table>';
+  if (document.getElementById('inc-sportif').checked) blocs += '<h2>Sportif</h2><table><tr><td>Maillot ' + (p.maillot||'') + '</td><td>Postes ' + (p.postes||[]).join(', ') + '</td><td>Préféré ' + (p.postePref||'') + '</td></tr></table>';
+  if (document.getElementById('inc-sante').checked) blocs += '<h2>Santé</h2><table><tr><td>Allergies</td><td>' + (p.allergies||'') + '</td></tr><tr><td>Consignes</td><td>' + (p.consignes||'') + '</td></tr><tr><td>Contact urgence</td><td>' + (p.contactUrgence||'') + '</td></tr></table>';
+  if (document.getElementById('inc-presences').checked) {
+    let totP=0,totR=0,totA=0; Object.values(db.presences).forEach(f => { const e=(f.joueurs||{})[p.id]; if(e==='present')totP++; else if(e==='retard')totR++; else if(e==='absent')totA++; });
+    blocs += '<h2>Présences</h2><table><tr><td>Présents</td><td>' + totP + '</td><td>Retards</td><td>' + totR + '</td><td>Absents</td><td>' + totA + '</td></tr></table>';
+  }
+  if (document.getElementById('inc-matchs').checked) {
+    let convos=0,joues=0,temps=0; (db.matchs||[]).forEach(m => { const c=(m.convocations||{})[p.id]; if(c&&c.convoque){convos++; if(c.joue){joues++; temps+=parseInt(c.minutes)||0;}} });
+    blocs += '<h2>Matchs</h2><table><tr><td>Convocations</td><td>' + convos + '</td><td>Joués</td><td>' + joues + '</td><td>Temps total</td><td>' + temps + ' min</td></tr></table>';
+  }
+  if (document.getElementById('inc-docs').checked) { const dj = db.documents.filter(d => d.joueurId === p.id); blocs += '<h2>Documents</h2>' + (dj.length ? dj.map(d => '<div>' + d.type + ' — ' + (d.dateAjout||'') + '</div>').join('') : 'Aucun. Les originaux restent dans le dossier du joueur.'); }
+  if (document.getElementById('inc-notes').checked) { blocs += '<h2>Notes</h2><div>' + (p.notes||'Aucune') + '</div>'; if (p.historique && p.historique.length) blocs += '<h2>Historique</h2>' + p.historique.map(h => '<div style="font-size:12px">' + h + '</div>').join(''); }
+  openPrint(buildHTML('FICHE JOUEUR — ' + p.prenom + ' ' + p.nom, blocs));
+}
+
+function genererMulti() {
+  const ids = [...document.querySelectorAll('.multi-cb:checked')].map(c => c.value);
+  if (!ids.length) { alert('Sélectionne au moins un joueur.'); return; }
+  let blocs = '';
+  ids.forEach(id => {
+    const p = db.joueurs.find(x => x.id === id); if (!p) return;
+    blocs += '<h2>' + p.prenom + ' ' + p.nom + ' — ' + p.cat + '</h2><table>';
+    blocs += '<tr><td>Naissance</td><td>' + (p.dnaiss||'') + '</td><td>Sexe</td><td>' + (p.sexe||'') + '</td></tr>';
+    blocs += '<tr><td>Licence</td><td>' + (p.licence||'') + '</td><td>Validité</td><td>' + (p.licenceValidite||'') + '</td></tr>';
+    blocs += '<tr><td>Statut licence</td><td>' + (p.licenceStatut||'') + '</td><td>RDV médical</td><td>' + (p.rdvMedical||'') + '</td></tr>';
+    blocs += '<tr><td>Maillot</td><td>' + (p.maillot||'') + '</td><td>Postes</td><td>' + (p.postes||[]).join(', ') + '</td></tr>';
+    blocs += '<tr><td>Allergies</td><td>' + (p.allergies||'') + '</td><td>Contact urgence</td><td>' + (p.contactUrgence||'') + '</td></tr>';
+    let convos=0,joues=0,temps=0; (db.matchs||[]).forEach(m => { const c=(m.convocations||{})[p.id]; if(c&&c.convoque){convos++; if(c.joue){joues++; temps+=parseInt(c.minutes)||0;}} });
+    blocs += '<tr><td>Convocations</td><td>' + convos + '</td><td>Joués</td><td>' + joues + '</td><td>Temps</td><td>' + temps + ' min</td></tr>';
+    blocs += '</table>';
+  });
+  openPrint(buildHTML('Fiches joueurs — ' + ids.length + ' joueur(s)', blocs));
+}
+
+function genererDonnees() {
+  let blocs = '';
+  if (document.getElementById('ex-joueurs').checked) {
+    blocs += '<h2>Joueurs (' + db.joueurs.length + ')</h2><table><tr><th>Nom</th><th>Prénom</th><th>Cat</th><th>Statut</th><th>Licence</th></tr>';
+    db.joueurs.forEach(j => blocs += '<tr><td>' + j.nom + '</td><td>' + j.prenom + '</td><td>' + j.cat + '</td><td>' + (j.statut||'') + '</td><td>' + (j.licence||'') + '</td></tr>');
+    blocs += '</table>';
+  }
+  if (document.getElementById('ex-matchs').checked) {
+    blocs += '<h2>Matchs (' + db.matchs.length + ')</h2><table><tr><th>Date</th><th>Adversaire</th><th>Cat</th><th>Division</th><th>Résultat</th></tr>';
+    db.matchs.forEach(m => blocs += '<tr><td>' + (m.date||'') + '</td><td>' + (m.adversaire||'') + '</td><td>' + (m.cat||'') + '</td><td>' + (m.division||'') + '</td><td>' + (m.score||'') + '</td></tr>');
+    blocs += '</table>';
+  }
+  if (document.getElementById('ex-presences').checked) {
+    const n = Object.keys(db.presences).length;
+    blocs += '<h2>Présences</h2><p>' + n + ' feuilles de présence enregistrées.</p>';
+  }
+  if (document.getElementById('ex-convocations').checked) {
+    blocs += '<h2>Convocations</h2><p>Incluses dans les fiches matchs ci-dessus.</p>';
+  }
+  if (document.getElementById('ex-documents').checked) {
+    blocs += '<h2>Documents (' + db.documents.length + ')</h2><table><tr><th>Joueur</th><th>Type</th><th>Date</th><th>RDV médical</th></tr>';
+    db.documents.forEach(d => { const j = db.joueurs.find(x => x.id === d.joueurId); blocs += '<tr><td>' + (j?j.prenom+' '+j.nom:'?') + '</td><td>' + d.type + '</td><td>' + (d.dateAjout||'') + '</td><td>' + (d.rdv||'') + '</td></tr>'; });
+    blocs += '</table>';
+  }
+  openPrint(buildHTML('Données Foot Manager', blocs));
 }
 </script>
 </body>
