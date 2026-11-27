@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foot Manager — Export PDF</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
+  body { background:#f4f6f8; color:#1a2332; }
+  header { background:#0f2744; color:#fff; height:56px; display:flex; align-items:center; padding:0 16px; }
+  .logo { font-weight:700; font-size:18px; letter-spacing:1px; }
+  main { max-width:900px; margin:0 auto; padding:20px 16px 60px; }
+  h1 { font-size:22px; margin-bottom:6px; }
+  .sub { color:#6b7c93; font-size:13px; margin-bottom:20px; }
+  .card { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); margin-bottom:16px; }
+  .card h2 { font-size:14px; text-transform:uppercase; letter-spacing:1px; color:#0f2744; margin-bottom:12px; border-bottom:2px solid #3d9cf0; padding-bottom:6px; }
+  label { display:block; font-size:12px; color:#6b7c93; margin:10px 0 4px; font-weight:600; }
+  input, select, textarea { width:100%; padding:10px 12px; border:1px solid #d5dde8; border-radius:8px; font-size:14px; background:#fafbfc; }
+  textarea { min-height:70px; resize:vertical; }
+  .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+  .check { display:flex; align-items:center; gap:8px; font-size:13px; margin:6px 0; }
+  .check input { width:auto; }
+  .btns { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  button { padding:12px 20px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
+  .btn-pdf { background:#3d9cf0; color:#fff; }
+  .btn-pdf:hover { background:#2b84d6; }
+  .btn-print { background:#2e9e5b; color:#fff; }
+  .btn-back { background:#e2e8f0; color:#1a2332; }
+  .doc-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eef1f5; font-size:13px; }
+  .doc-item .type { font-weight:600; color:#0f2744; }
+  .preview { border:1px dashed #c9d6e3; border-radius:8px; padding:16px; background:#fafbfc; margin-top:12px; font-size:13px; color:#6b7c93; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+  .badge.ok { background:#d9f2e6; color:#2e9e5b; }
+  .badge.att { background:#fde8d0; color:#e67e22; }
+  .badge.manq { background:#fbd9d5; color:#c0392b; }
+  @media print { header, .btns, .no-print { display:none !important; } body { background:#fff; } main { padding:0; max-width:none; } .card { box-shadow:none; border:1px solid #ddd; } }
+</style>
+</head>
+<body>
+<header><div class="logo">FOOT MANAGER — EXPORT</div></header>
+<main>
+  <h1>Fiche récapitulative joueur</h1>
+  <div class="sub">Génère un PDF imprimable ou transmissible à la fédération. Les documents originaux ne sont jamais supprimés.</div>
+
+  <div class="card">
+    <h2>1. Sélection du joueur</h2>
+    <label>Joueur</label>
+    <select id="player-select" onchange="loadPlayer()"></select>
+  </div>
+
+  <div class="card" id="bloc1">
+    <h2>Bloc 1 — Identité et profil</h2>
+    <div class="row">
+      <div><label>Nom</label><input id="e-nom" readonly></div>
+      <div><label>Prénom</label><input id="e-prenom" readonly></div>
+      <div><label>Date de naissance</label><input id="e-dnaiss" readonly></div>
+      <div><label>Lieu de naissance</label><input id="e-lnaiss" readonly></div>
+      <div><label>Catégorie</label><input id="e-cat" readonly></div>
+      <div><label>Sexe</label><input id="e-sexe" readonly></div>
+    </div>
+    <label>Adresse</label><input id="e-adresse" readonly>
+  </div>
+
+  <div class="card" id="bloc2">
+    <h2>Bloc 2 — Parents et responsables</h2>
+    <div id="e-parents"></div>
+  </div>
+
+  <div class="card" id="bloc3">
+    <h2>Bloc 3 — Licence et administratif</h2>
+    <div class="row">
+      <div><label>Numéro de licence</label><input id="e-licence" readonly></div>
+      <div><label>Date de validité</label><input id="e-validite" readonly></div>
+      <div><label>Statut</label><input id="e-statut-lic" readonly></div>
+    </div>
+  </div>
+
+  <div class="card" id="bloc4">
+    <h2>Bloc 4 — Informations sportives</h2>
+    <div class="row">
+      <div><label>Numéro de maillot</label><input id="e-maillot" readonly></div>
+      <div><label>Postes</label><input id="e-postes" readonly></div>
+      <div><label>Poste préféré</label><input id="e-pref" readonly></div>
+    </div>
+  </div>
+
+  <div class="card" id="bloc5">
+    <h2>Bloc 5 — Santé et sécurité</h2>
+    <label>Allergies</label><textarea id="e-allergies" readonly></textarea>
+    <label>Consignes d'urgence</label><textarea id="e-consignes" readonly></textarea>
+    <div class="row">
+      <div><label>Contact d'urgence</label><input id="e-contact" readonly></div>
+      <div><label>Téléphone 2 (facultatif)</label><input id="e-tel2" readonly></div>
+    </div>
+  </div>
+
+  <div class="card" id="bloc8">
+    <h2>Bloc 8 — Documents et autorisations</h2>
+    <div id="e-docs"></div>
+    <div class="row" style="margin-top:10px">
+      <div><label>Rendez-vous médical</label><span id="e-rdv" class="badge"></span></div>
+    </div>
+  </div>
+
+  <div class="card no-print">
+    <h2>Pièces à inclure dans le PDF</h2>
+    <div class="check"><input type="checkbox" id="inc-identite" checked> Identité et profil</div>
+    <div class="check"><input type="checkbox" id="inc-parents" checked> Parents et responsables</div>
+    <div class="check"><input type="checkbox" id="inc-licence" checked> Licence et administratif</div>
+    <div class="check"><input type="checkbox" id="inc-sportif" checked> Informations sportives</div>
+    <div class="check"><input type="checkbox" id="inc-sante" checked> Santé et sécurité</div>
+    <div class="check"><input type="checkbox" id="inc-docs" checked> Documents joints (originaux conservés)</div>
+    <div class="btns">
+      <button class="btn-pdf" onclick="genererPDF()">Générer le PDF</button>
+      <button class="btn-print" onclick="window.print()">Imprimer</button>
+      <button class="btn-back" onclick="location.href='index.html'">Retour tableau de bord</button>
+    </div>
+    <div class="preview">Aperçu : le PDF regroupe les blocs cochés ci-dessus. Extensible plus tard aux convocations, présences et matchs.</div>
+  </div>
+</main>
+<script>
+function load(k,fb){try{return JSON.parse(localStorage.getItem('fm.'+k))??fb;}catch(e){return fb;}}
+let players=load('players',[]);
+const sel=document.getElementById('player-select');
+players.forEach(p=>{
+  const o=document.createElement('option'); o.value=p.id; o.textContent=p.prenom+' '+p.nom+' ('+p.cat+')'; sel.appendChild(o);
+});
+function loadPlayer(){
+  const p=players.find(x=>x.id==sel.value);
+  if(!p)return;
+  document.getElementById('e-nom').value=p.nom;
+  document.getElementById('e-prenom').value=p.prenom;
+  document.getElementById('e-dnaiss').value=p.dnaiss||'';
+  document.getElementById('e-lnaiss').value=p.lnaiss||'';
+  document.getElementById('e-cat').value=p.cat;
+  document.getElementById('e-sexe').value=p.sexe||'';
+  document.getElementById('e-adresse').value=p.adresse||'';
+  const parents=load('parents',{});
+  const pr=parents[p.id]||[];
+  document.getElementById('e-parents').innerHTML=pr.length?pr.map(r=>`<div class="row" style="margin-bottom:8px"><div><label>Nom</label><input value="${r.nom||''}" readonly></div><div><label>Lien</label><input value="${r.lien||''}" readonly></div><div><label>Téléphone</label><input value="${r.tel||''}" readonly></div><div><label>E-mail</label><input value="${r.email||''}" readonly></div></div>`).join(''):'<div style="color:#6b7c93;font-size:13px">Aucun responsable renseigné.</div>';
+  document.getElementById('e-licence').value=p.licence||'';
+  document.getElementById('e-validite').value=p.licenceValidite||'';
+  document.getElementById('e-statut-lic').value=p.licenceStatut||'';
+  document.getElementById('e-maillot').value=p.maillot||'';
+  document.getElementById('e-postes').value=(p.poste||[]).join(', ');
+  document.getElementById('e-pref').value=p.postePref||'';
+  document.getElementById('e-allergies').value=p.allergies||'';
+  document.getElementById('e-consignes').value=p.consignes||'';
+  document.getElementById('e-contact').value=p.contactUrgence||'';
+  document.getElementById('e-tel2').value=p.tel2||'';
+  const docs=load('docs',{});
+  const dj=docs[p.id]||[];
+  document.getElementById('e-docs').innerHTML=dj.length?dj.map(d=>`<div class="doc-item"><span class="type">${d.type}</span><span>${d.nom}</span></div>`).join(''):'<div style="color:#6b7c93;font-size:13px">Aucun document.</div>';
+  const rdv=p.rdvMedical||'à prévoir';
+  const b=document.getElementById('e-rdv'); b.textContent=rdv; b.className='badge '+(rdv==='effectué'?'ok':rdv==='en attente'?'att':'manq);
+}
+if(players.length){sel.value=players[0].id; loadPlayer();}
+function genererPDF(){
+  const p=players.find(x=>x.id==sel.value);
+  if(!p)return;
+  const w=window.open('','PRINT','width=800,height=900');
+  let html='<html><head><title>Fiche '+p.prenom+' '+p.nom+'</title><style>body{font-family:sans-serif;padding:20px}h1{font-size:20px}h2{font-size:14px;color:#0f2744;border-bottom:1px solid #ccc;margin-top:16px}table{width:100%;border-collapse:collapse;font-size:13px}td{padding:4px 8px;border-bottom:1px solid #eee}</style></head><body>';
+  html+='<h1>FICHE JOUEUR — '+p.prenom+' '+p.nom+'</h1>';
+  if(document.getElementById('inc-identite').checked){html+='<h2>Identité</h2><table><tr><td>Nom</td><td>'+p.nom+'</td><td>Prénom</td><td>'+p.prenom+'</td></tr><tr><td>Naissance</td><td>'+(p.dnaiss||'')+'</td><td>Lieu</td><td>'+(p.lnaiss||'')+'</td></tr><tr><td>Catégorie</td><td>'+p.cat+'</td><td>Sexe</td><td>'+(p.sexe||'')+'</td></tr><tr><td>Adresse</td><td colspan="3">'+(p.adresse||'')+'</td></tr></table>';}
+  if(document.getElementById('inc-parents').checked){const pr=load('parents',{})[p.id]||[]; html+='<h2>Parents et responsables</h2>'+(pr.length?pr.map(r=>'<table><tr><td>'+r.nom+'</td><td>'+r.lien+'</td><td>'+r.tel+'</td><td>'+r.email+'</td></tr></table>').join(''):'Aucun.');}
+  if(document.getElementById('inc-licence').checked){html+='<h2>Licence</h2><table><tr><td>N° '+ (p.licence||'') +'</td><td>Validité '+ (p.licenceValidite||'') +'</td><td>Statut '+ (p.licenceStatut||'') +'</td></tr></table>';}
+  if(document.getElementById('inc-sportif').checked){html+='<h2>Sportif</h2><table><tr><td>Maillot '+ (p.maillot||'') +'</td><td>Postes '+ (p.poste||[]).join(', ') +'</td><td>Préféré '+ (p.postePref||'') +'</td></tr></table>';}
+  if(document.getElementById('inc-sante').checked){html+='<h2>Santé</h2><table><tr><td>Allergies</td><td>'+(p.allergies||'')+'</td></tr><tr><td>Consignes</td><td>'+(p.consignes||'')+'</td></tr><tr><td>Contact urgence</td><td>'+(p.contactUrgence||'')+'</td></tr></table>';}
+  if(document.getElementById('inc-docs').checked){const dj=load('docs',{})[p.id]||[]; html+='<h2>Documents</h2>'+(dj.length?dj.map(d=>'<div>'+d.type+' — '+d.nom+'</div>').join(''):'Aucun. Les originaux restent dans le dossier du joueur.');}
+  html+='<p style="margin-top:20px;font-size:11px;color:#888">Généré par Foot Manager le '+new Date().toLocaleDateString('fr-FR')+'. Document à usage club / fédération.</p></body></html>';
+  w.document.write(html); w.document.close(); w.focus(); setTimeout(()=>w.print(),400);
+}
+</script>
+</body>
+</html>
