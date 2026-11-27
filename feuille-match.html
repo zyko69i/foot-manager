@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foot Manager — Feuille de match</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+  body { background:#f4f6f8; color:#1a1a2e; }
+  header { background:#1a1a2e; color:#fff; padding:14px 16px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:50; }
+  .burger { background:none; border:none; color:#fff; font-size:22px; cursor:pointer; }
+  header h1 { font-size:18px; font-weight:600; }
+  nav { position:fixed; top:0; left:-280px; width:280px; height:100vh; background:#1a1a2e; color:#fff; padding:20px 16px; transition:left .25s; z-index:100; overflow-y:auto; }
+  nav.open { left:0; }
+  nav .close { background:none; border:none; color:#fff; font-size:20px; float:right; cursor:pointer; }
+  nav a { display:block; color:#cbd5e1; text-decoration:none; padding:10px 8px; border-radius:6px; font-size:15px; }
+  nav a:hover { background:#2d2d44; color:#fff; }
+  nav .sub { padding-left:20px; font-size:13px; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:90; }
+  .overlay.open { display:block; }
+  main { max-width:960px; margin:0 auto; padding:16px; }
+  .card { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); margin-bottom:16px; }
+  .card h2 { font-size:14px; text-transform:uppercase; letter-spacing:1px; color:#1a1a2e; margin-bottom:12px; border-bottom:2px solid #3d9cf0; padding-bottom:6px; }
+  label { display:block; font-size:12px; color:#64748b; margin:10px 0 4px; font-weight:600; }
+  input, select { width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fafbfc; }
+  .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+  .btn { border:none; border-radius:8px; padding:10px 16px; font-size:14px; font-weight:600; cursor:pointer; }
+  .btn.primary { background:#1a1a2e; color:#fff; }
+  .btn.ghost { background:#e2e8f0; color:#1a1a2e; }
+  .btn.danger { background:#fee2e2; color:#991b1b; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; padding:8px; background:#f1f5f9; color:#475569; font-weight:600; border-bottom:2px solid #e2e8f0; }
+  td { padding:8px; border-bottom:1px solid #eef1f5; vertical-align:middle; }
+  .bar { display:inline-block; height:14px; border-radius:3px; margin-right:2px; }
+  .bar.p { background:#22c55e; }
+  .bar.r { background:#f59e0b; }
+  .bar.a { background:#ef4444; }
+  .stats { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .stat { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:12px; }
+  .stat b { display:block; font-size:16px; }
+  .feuille-head { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .feuille-head h3 { font-size:15px; }
+  @media print { header, .btns, .no-print, nav, .overlay { display:none !important; } body { background:#fff; } main { padding:0; max-width:none; } .card { box-shadow:none; border:1px solid #ddd; } }
+</style>
+</head>
+<body>
+<header>
+  <button class="burger" onclick="toggleNav()">☰</button>
+  <h1>Feuille de match</h1>
+</header>
+<nav id="nav">
+  <button class="close" onclick="toggleNav()">✕</button>
+  <a href="index.html">Tableau de bord</a>
+  <a href="categories.html">Catégories</a>
+  <div class="sub">
+    <a href="categorie.html?cat=U6">U6</a><a href="categorie.html?cat=U7">U7</a><a href="categorie.html?cat=U8">U8</a><a href="categorie.html?cat=U9">U9</a><a href="categorie.html?cat=U10">U10</a><a href="categorie.html?cat=U11">U11</a><a href="categorie.html?cat=U12">U12</a><a href="categorie.html?cat=U13">U13</a><a href="categorie.html?cat=U14">U14</a><a href="categorie.html?cat=U15">U15</a><a href="categorie.html?cat=U16">U16</a><a href="categorie.html?cat=U17">U17</a><a href="categorie.html?cat=U18">U18</a>
+  </div>
+  <a href="matchs.html">Matchs</a>
+  <a href="presences.html">Présences</a>
+  <a href="convocations.html">Convocations</a>
+  <a href="documents.html">Documents</a>
+  <a href="parametres.html">Paramètres</a>
+  <a href="export.html">Export</a>
+  <a href="feuille-match.html" style="background:#2d2d44;color:#fff">Feuille de match</a>
+</nav>
+<div class="overlay" id="overlay" onclick="toggleNav()"></div>
+<main>
+  <div class="card">
+    <h2>Nouveau match</h2>
+    <div class="row">
+      <div><label>Catégorie</label><select id="fm-cat" onchange="renderFeuille()"></select></div>
+      <div><label>Date</label><input type="date" id="fm-date"></div>
+      <div><label>Heure de RDV</label><input type="time" id="fm-rdv"></div>
+      <div><label>Heure de match</label><input type="time" id="fm-heure"></div>
+      <div><label>Adversaire</label><input type="text" id="fm-adv" placeholder="Nom de l'équipe adverse"></div>
+      <div><label>Domicile / Extérieur</label><select id="fm-lieu"><option value="dom">Domicile</option><option value="ext">Extérieur</option></select></div>
+      <div><label>Division</label><select id="fm-div"></select></div>
+      <div><label>Terrain</label><input type="text" id="fm-terrain" placeholder="Nom du terrain"></div>
+    </div>
+    <div class="btns" style="margin-top:12px">
+      <button class="btn primary" onclick="sauverMatch()">Enregistrer le match</button>
+      <button class="btn ghost" onclick="window.print()">Imprimer</button>
+    </div>
+  </div>
+
+  <div class="card" id="feuille-card">
+    <div class="feuille-head">
+      <h3 id="feuille-titre">Sélectionne une catégorie</h3>
+      <div class="stats" id="feuille-stats"></div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>N°</th><th>Joueur</th><th>Présences 3 dernières</th><th>Matchs joués</th><th>Buteur ?</th><th>Titulaire</th><th>Remplaçant</th><th>Non convoqué</th><th>Min</th>
+        </tr>
+      </thead>
+      <tbody id="feuille-body"></tbody>
+    </table>
+  </div>
+
+  <div class="card no-print">
+    <h2>Historique des feuilles</h2>
+    <div id="hist-list"></div>
+  </div>
+</main>
+<script>
+let db = JSON.parse(localStorage.getItem('footmanager') || '{"joueurs":[],"matchs":[],"presences":{},"documents":[],"parametres":{},"feuilles":[]});
+if (!db.joueurs) db.joueurs = [];
+if (!db.matchs) db.matchs = [];
+if (!db.presences) db.presences = {};
+if (!db.documents) db.documents = [];
+if (!db.parametres) db.parametres = {};
+if (!db.feuilles) db.feuilles = [];
+
+const CAT = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
+const DIVS = ['Ligue 1','Ligue 2','National','Régional 1','Régional 2','Régional 3','Départemental 1','Départemental 2','Départemental 3','Départemental 4','Promotion d\'Excellence','Excellence','Première Division','Deuxième Division','Troisième Division','Quatrième Division','Cinquième Division','Sixième Division','Septième Division','Huitième Division','Critérium U13','Critérium U14','Critérium U15','Critérium U16','Critérium U17','Critérium U19'];
+
+CAT.forEach(c => document.getElementById('fm-cat').innerHTML += `<option value="${c}">${c}</option>`);
+DIVS.forEach(d => document.getElementById('fm-div').innerHTML += `<option value="${d}">${d}</option>`);
+document.getElementById('fm-div').innerHTML += '<option value="">Autre (champ libre)</option>';
+
+function toggleNav() {
+  document.getElementById('nav').classList.toggle('open);
+  document.getElementById('overlay').classList.toggle('open);
+}
+function save() { localStorage.setItem('footmanager', JSON.stringify(db)); }
+
+function barres(pid) {
+  const feuilles = Object.values(db.presences).sort((a,b) => (b.date||'').localeCompare(a.date||'')).slice(0,3);
+  return feuilles.map(f => {
+    const e = (f.joueurs||{})[pid];
+    if (e === 'present') return '<span class="bar p" title="Présent"></span>';
+    if (e === 'retard') return '<span class="bar r" title="Retard"></span>';
+    if (e === 'absent') return '<span class="bar a" title="Absent"></span>';
+    return '<span class="bar" style="background:#e2e8f0" title="Pas de pointage"></span>';
+  }).join('') || '<span style="color:#94a3b8;font-size:12px">—</span>';
+}
+
+function statsJoueur(pid) {
+  let p=0,r=0,a=0;
+  Object.values(db.presences).forEach(f => { const e=(f.joueurs||{})[pid]; if(e==='present')p++; else if(e==='retard')r++; else if(e==='absent')a++; });
+  let joues=0,temps=0,buts=0;
+  (db.matchs||[]).forEach(m => { const c=(m.convocations||{})[pid]; if(c&&c.joue){ joues++; temps+=parseInt(c.minutes)||0; buts+=parseInt(c.buts)||0; } });
+  return {p,r,a,joues,temps,buts};
+}
+
+function renderFeuille() {
+  const cat = document.getElementById('fm-cat').value;
+  const joueurs = db.joueurs.filter(j => j.cat === cat);
+  document.getElementById('feuille-titre').textContent = 'Feuille de match — ' + cat + (document.getElementById('fm-adv').value ? ' vs ' + document.getElementById('fm-adv').value : '');
+  let tp=0,tr=0,ta=0,tj=0;
+  const body = joueurs.map((j,i) => {
+    const s = statsJoueur(j.id);
+    tp+=s.p; tr+=s.r; ta+=s.a; tj+=s.joues;
+    return `<tr>
+      <td>${j.maillot||''}</td>
+      <td><a href="joueur.html?id=${j.id}" style="color:#1a1a2e;text-decoration:none;font-weight:600">${j.prenom} ${j.nom}</a></td>
+      <td>${barres(j.id)}</td>
+      <td>${s.joues}</td>
+      <td><input type="number" min="0" value="0" style="width:50px" class="fm-buts" data-id="${j.id}"></td>
+      <td><input type="checkbox" class="fm-tit" data-id="${j.id}"></td>
+      <td><input type="checkbox" class="fm-rem" data-id="${j.id}"></td>
+      <td><input type="checkbox" class="fm-nc" data-id="${j.id}"></td>
+      <td><input type="number" min="0" step="5" value="0" style="width:60px" class="fm-min" data-id="${j.id}"></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('feuille-body').innerHTML = body || '<tr><td colspan="9" style="color:#94a3b8;text-align:center;padding:20px">Aucun joueur dans cette catégorie.</td></tr>';
+  document.getElementById('feuille-stats').innerHTML = `
+    <div class="stat"><b>${joueurs.length}</b> joueurs</div>
+    <div class="stat"><b>${tp}</b> présences</div>
+    <div class="stat"><b>${tr}</b> retards</div>
+    <div class="stat"><b>${ta}</b> absents</div>
+    <div class="stat"><b>${tj}</b> matchs joués (saison)</div>`;
+}
+
+document.getElementById('fm-cat').addEventListener('change', renderFeuille);
+document.getElementById('fm-adv').addEventListener('input', renderFeuille);
+
+function sauverMatch() {
+  const cat = document.getElementById('fm-cat').value;
+  if (!cat) { alert('Choisis une catégorie.'); return; }
+  const match = {
+    id: 'm' + Date.now(),
+    cat,
+    date: document.getElementById('fm-date').value,
+    rdv: document.getElementById('fm-rdv').value,
+    heure: document.getElementById('fm-heure').value,
+    adversaire: document.getElementById('fm-adv').value,
+    lieu: document.getElementById('fm-lieu').value,
+    division: document.getElementById('fm-div').value,
+    terrain: document.getElementById('fm-terrain').value,
+    convocations: {},
+    created: new Date().toISOString()
+  };
+  document.querySelectorAll('.fm-tit').forEach(cb => { if(cb.checked){ if(!match.convocations[cb.dataset.id]) match.convocations[cb.dataset.id] = {}; match.convocations[cb.dataset.id].titulaire = true; } });
+  document.querySelectorAll('.fm-rem').forEach(cb => { if(cb.checked){ if(!match.convocations[cb.dataset.id]) match.convocations[cb.dataset.id] = {}; match.convocations[cb.dataset.id].remplacant = true; } });
+  document.querySelectorAll('.fm-nc').forEach(cb => { if(cb.checked){ if(!match.convocations[cb.dataset.id]) match.convocations[cb.dataset.id] = {}; match.convocations[cb.dataset.id].nonConvoque = true; } });
+  document.querySelectorAll('.fm-min').forEach(inp => { const id=inp.dataset.id; if(!match.convocations[id]) match.convocations[id] = {}; match.convocations[id].minutes = parseInt(inp.value)||0; match.convocations[id].joue = parseInt(inp.value)>0; });
+  document.querySelectorAll('.fm-buts').forEach(inp => { const id=inp.dataset.id; if(!match.convocations[id]) match.convocations[id] = {}; match.convocations[id].buts = parseInt(inp.value)||0; });
+  db.matchs.push(match);
+  db.feuilles.push({ id: match.id, cat, date: match.date, adversaire: match.adversaire });
+  // Mettre à jour les stats dans les fiches joueurs
+  Object.keys(match.convocations).forEach(id => {
+    const j = db.joueurs.find(x => x.id === id);
+    if (!j) return;
+    const c = match.convocations[id];
+    if (!j.stats) j.stats = { matchs:0, buts:0, temps:0 };
+    if (c.joue) { j.stats.matchs = (j.stats.matchs||0)+1; j.stats.temps = (j.stats.temps||0)+ (c.minutes||0); }
+    j.stats.buts = (j.stats.buts||0)+ (c.buts||0);
+    if (!j.historique) j.historique = [];
+    j.historique. push(new Date().toLocaleDateString('fr-FR') + ' — Match vs ' + (match.adversaire||'?') + ' : ' + (c.titulaire?'titulaire':c.remplacant?'remplaçant':c.nonConvoque?'non convoqué':'') + (c.joue?' joué '+c.minutes+' min':'') + (c.buts?' '+c.buts+' but(s)':''));
+  });
+  save();
+  alert('Match enregistré. Les stats remontent dans les fiches joueurs.');
+  renderHist();
+}
+
+function renderHist() {
+  const el = document.getElementById('hist-list);
+  const feuilles = db.feuilles.slice().reverse().slice(0,10);
+  el.innerHTML = feuilles.length ? feuilles.map(f => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eef1f5;font-size:13px"><span>${f.date||'—'} — ${f.cat} ${f.adversaire?'vs '+f.adversaire:''}</span><button class="btn ghost" style="padding:4px 10px;font-size:12px" onclick="location.href='feuille-match.html?feuille=${f.id}'">Ouvrir</button></div>`).join('') : '<div style="color:#94a3b8;font-size:13px">Aucune feuille enregistrée.</div>';
+}
+renderFeuille();
+renderHist();
+
+// Charger une feuille existante si ?feuille= dans l'URL
+const params = new URLSearchParams(location.search);
+if (params.get('feuille')) {
+  const f = db.matchs.find(m => m.id === params.get('feuille'));
+  if (f) {
+    document.getElementById('fm-cat').value = f.cat;
+    document.getElementById('fm-date').value = f.date||'';
+    document.getElementById('fm-rdv').value = f.rdv||'';
+    document.getElementById('fm-heure').value = f.heure||'';
+    document.getElementById('fm-adv').value = f.adversaire||'';
+    document.getElementById('fm-lieu').value = f.lieu||'dom';
+    document.getElementById('fm-div').value = f.division||'';
+    document.getElementById('fm-terrain').value = f.terrain||'';
+    renderFeuille();
+    // Restaurer les coches
+    Object.keys(f.convocations||{}).forEach(id => {
+      const c = f.convocations[id];
+      const tit = document.querySelector('.fm-tit[data-id="'+id+'"]'); if(tit&&c.titulaire) tit.checked=true;
+      const rem = document.querySelector('.fm-rem[data-id="'+id+'"]'); if(rem&&c.remplacant) rem.checked=true;
+      const nc = document.querySelector('.fm-nc[data-id="'+id+'"]'); if(nc&&c.nonConvoque) nc.checked=true;
+      const min = document.querySelector('.fm-min[data-id="'+id+'"]'); if(min) min.value = c.minutes||0;
+      const buts = document.querySelector('.fm-buts[data-id="'+id+'"]'); if(buts) buts.value = c.buts||0;
+    });
+  }
+}
+</script>
+</body>
+</html>
