@@ -78,7 +78,7 @@
 <div id="overlay" onclick="toggleMenu()"></div>
 <nav id="menu">
   <button class="close" onclick="toggleMenu()">&#10005; Fermer</button>
-  <a href="#" class="active" onclick="go('accueil')">Accueil</a>
+  <a href="#" class="active" onclick="go('dashboard')">Tableau de bord</a>
   <a href="#" onclick="go('categories')">Catégories</a>
   <a href="#" class="sub" onclick="go('u6')">U6</a><a href="#" class="sub" onclick="go('u7')">U7</a><a href="#" class="sub" onclick="go('u8')">U8</a><a href="#" class="sub" onclick="go('u9')">U9</a><a href="#" class="sub" onclick="go('u10')">U10</a><a href="#" class="sub" onclick="go('u11')">U11</a><a href="#" class="sub" onclick="go('u12')">U12</a><a href="#" class="sub" onclick="go('u13')">U13</a><a href="#" class="sub" onclick="go('u14')">U14</a><a href="#" class="sub" onclick="go('u15')">U15</a><a href="#" class="sub" onclick="go('u16')">U16</a><a href="#" class="sub" onclick="go('u17')">U17</a><a href="#" class="sub" onclick="go('u18')">U18</a>
   <a href="#" onclick="go('matchs')">Matchs</a>
@@ -170,7 +170,7 @@ function render(){
   document.getElementById('a-presences').textContent='2';
   document.getElementById('a-licences').textContent=players.filter(p=>p.licence<'2026-06-01').length||'1';
   document.getElementById('a-certifs').textContent=players.filter(p=>p.certificat!=='ok').length;
-  const bars=document.getElementById('bars');
+  const bars=document.getElementById('bars);
   bars.innerHTML='';
   CATS.forEach(c=>{
     const n=players.filter(p=>p.cat===c).length;
@@ -178,7 +178,7 @@ function render(){
     let cls='red'; if(n>=max)cls='green'; else if(n>=6)cls='orange';
     bars.innerHTML+=`<div class="bar-row" onclick="go('cat-'+'${c.toLowerCase()}')"><div class="cat">${c}</div><div class="bar-bg"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div><div class="pct">${n}</div></div>`;
   });
-  const ctx=document.getElementById('chart').getContext('2d');
+  const ctx=document.getElementById('chart').getContext('2d);
   const counts=CATS.map(c=>players.filter(p=>p.cat===c).length);
   const maxC=Math.max(...counts,1); const w=400,h=180,pad=30;
   ctx.clearRect(0,0,w,h);
