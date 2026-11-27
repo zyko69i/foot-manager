@@ -7,67 +7,69 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
-  body { background:#0a1428; color:#e8e8e8; }
-  header { background:#0f1f3d; color:#fff; height:56px; display:flex; align-items:center; padding:0 16px; position:sticky; top:0; z-index:100; border-bottom:2px solid #D4AF37; }
-  .burger { background:none; border:none; color:#D4AF37; font-size:26px; cursor:pointer; padding:8px; margin-right:12px; }
-  .logo { font-weight:700; font-size:18px; letter-spacing:1px; color:#D4AF37; }
-  #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; }
+  body { background:#ffffff; color:#1a1a1a; padding-bottom:70px; }
+  header { background:#2FAEE0; color:#fff; height:56px; display:flex; align-items:center; padding:0 16px; position:sticky; top:0; z-index:100; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+  .burger { background:none; border:none; color:#fff; font-size:26px; cursor:pointer; padding:8px; margin-right:12px; }
+  .logo { font-weight:700; font-size:18px; letter-spacing:1px; }
+  #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; }
   #overlay.open { display:block; }
-  nav { position:fixed; top:0; left:-280px; width:280px; height:100%; background:#0f1f3d; z-index:300; transition:left .25s ease; overflow-y:auto; padding:16px 0; border-right:1px solid #D4AF37; }
+  nav { position:fixed; top:0; left:-280px; width:280px; height:100%; background:#ffffff; z-index:300; transition:left .25s ease; overflow-y:auto; padding:16px 0; box-shadow:2px 0 10px rgba(0,0,0,.15); }
   nav.open { left:0; }
-  nav .close { color:#D4AF37; background:none; border:none; font-size:22px; padding:8px 16px; cursor:pointer; display:block; width:100%; text-align:left; }
-  nav a { display:block; color:#c9d6e3; text-decoration:none; padding:12px 20px; font-size:15px; border-left:3px solid transparent; }
-  nav a:hover, nav a.active { background:#1a3a5c; color:#fff; border-left-color:#D4AF37; }
-  nav .sub { padding-left:36px; font-size:13px; color:#8fa3b8; }
-  nav .sub:hover { color:#D4AF37; }
+  nav .close { color:#2FAEE0; background:none; border:none; font-size:22px; padding:8px 16px; cursor:pointer; display:block; width:100%; text-align:left; font-weight:600; }
+  nav a { display:block; color:#333; text-decoration:none; padding:12px 20px; font-size:15px; border-left:3px solid transparent; }
+  nav a:hover, nav a.active { background:#f0f8ff; color:#2FAEE0; border-left-color:#2FAEE0; }
+  nav .sub { padding-left:36px; font-size:13px; color:#666; }
+  nav .sub:hover { color:#2FAEE0; }
   main { max-width:1100px; margin:0 auto; padding:20px 16px 60px; }
-  h1 { font-size:22px; margin-bottom:16px; color:#D4AF37; }
+  h1 { font-size:22px; margin-bottom:16px; color:#2FAEE0; }
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:20px; }
-  .stat { background:#152238; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.3); cursor:pointer; transition:transform .15s; border:1px solid #2a3a5c; }
-  .stat:hover { transform:translateY(-2px); border-color:#D4AF37; }
-  .stat .num { font-size:28px; font-weight:700; color:#D4AF37; }
-  .stat .label { font-size:12px; color:#8fa3b8; text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+  .stat { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); cursor:pointer; transition:transform .15s; border:1px solid #e0e0e0; }
+  .stat:hover { transform:translateY(-2px); border-color:#2FAEE0; }
+  .stat .num { font-size:28px; font-weight:700; color:#2FAEE0; }
+  .stat .label { font-size:12px; color:#666; text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
   .stat.actifs .num { color:#2e9e5b; }
   .stat.blesses .num { color:#e67e22; }
   .stat.suspendus .num { color:#c0392b; }
   .section { margin-bottom:24px; }
-  .section h2 { font-size:15px; text-transform:uppercase; letter-spacing:1px; color:#D4AF37; margin-bottom:10px; }
+  .section h2 { font-size:15px; text-transform:uppercase; letter-spacing:1px; color:#2FAEE0; margin-bottom:10px; }
   .alerts { display:flex; flex-direction:column; gap:8px; }
-  .alert { background:#152238; border-radius:8px; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.3); border-left:4px solid #c0392b; }
+  .alert { background:#fff; border-radius:8px; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.07); border-left:4px solid #c0392b; }
   .alert.orange { border-left-color:#e67e22; }
-  .alert.blue { border-left-color:#D4AF37; }
-  .alert .count { font-weight:700; font-size:20px; min-width:32px; color:#D4AF37; }
+  .alert.blue { border-left-color:#2FAEE0; }
+  .alert .count { font-weight:700; font-size:20px; min-width:32px; color:#2FAEE0; }
   .alert .txt { font-size:14px; flex:1; }
-  .alert .go { color:#D4AF37; font-size:13px; }
+  .alert .go { color:#2FAEE0; font-size:13px; }
   .bars { display:flex; flex-direction:column; gap:6px; }
   .bar-row { display:flex; align-items:center; gap:10px; cursor:pointer; padding:4px 0; }
-  .bar-row .cat { width:40px; font-weight:600; font-size:13px; color:#D4AF37; }
-  .bar-bg { flex:1; height:18px; background:#1a2a4a; border-radius:9px; overflow:hidden; }
+  .bar-row .cat { width:40px; font-weight:600; font-size:13px; color:#2FAEE0; }
+  .bar-bg { flex:1; height:18px; background:#e8f4fc; border-radius:9px; overflow:hidden; }
   .bar-fill { height:100%; border-radius:9px; transition:width .4s; }
   .bar-fill.green { background:#2e9e5b; }
   .bar-fill.orange { background:#e67e22; }
   .bar-fill.red { background:#c0392b; }
-  .bar-row .pct { width:36px; font-size:12px; color:#8fa3b8; text-align:right; }
+  .bar-row .pct { width:36px; font-size:12px; color:#666; text-align:right; }
   .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
-  .card { background:#152238; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.3); border:1px solid #2a3a5c; }
-  .card h3 { font-size:14px; margin-bottom:10px; color:#D4AF37; }
+  .card { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); border:1px solid #e0e0e0; }
+  .card h3 { font-size:14px; margin-bottom:10px; color:#2FAEE0; }
   .feed { list-style:none; }
-  .feed li { padding:8px 0; border-bottom:1px solid #2a3a5c; font-size:13px; color:#c9d6e3; }
-  .feed li span { color:#8fa3b8; font-size:11px; margin-right:8px; }
+  .feed li { padding:8px 0; border-bottom:1px solid #eee; font-size:13px; color:#333; }
+  .feed li span { color:#999; font-size:11px; margin-right:8px; }
   .coach-list { list-style:none; }
   .coach-list li { padding:6px 0; font-size:13px; display:flex; justify-content:space-between; cursor:pointer; }
-  .coach-list li:hover { color:#D4AF37; }
+  .coach-list li:hover { color:#2FAEE0; }
   .training { width:100%; border-collapse:collapse; font-size:13px; }
-  .training th { text-align:left; padding:8px; background:#1a2a4a; color:#D4AF37; font-weight:600; }
-  .training td { padding:8px; border-bottom:1px solid #2a3a5c; cursor:pointer; }
-  .training tr:hover td { background:#1a3a5c; }
+  .training th { text-align:left; padding:8px; background:#f0f8ff; color:#2FAEE0; font-weight:600; }
+  .training td { padding:8px; border-bottom:1px solid #eee; cursor:pointer; }
+  .training tr:hover td { background:#f7fbff; }
   .tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
-  .tag.green { background:#1a3a2a; color:#2e9e5b; }
-  .tag.orange { background:#3a2a1a; color:#e67e22; }
-  .tag.red { background:#3a1a1a; color:#c0392b; }
-  .last-player { background:#152238; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.3); cursor:pointer; display:flex; align-items:center; gap:12px; border:1px solid #2a3a5c; }
-  .last-player:hover { border-color:#D4AF37; }
-  .avatar { width:44px; height:44px; border-radius:50%; background:#D4AF37; color:#0a1428; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; }
+  .tag.green { background:#e6f7ed; color:#2e9e5b; }
+  .tag.orange { background:#fff3e0; color:#e67e22; }
+  .tag.red { background:#fdecea; color:#c0392b; }
+  .last-player { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); cursor:pointer; display:flex; align-items:center; gap:12px; border:1px solid #e0e0e0; }
+  .last-player:hover { border-color:#2FAEE0; }
+  .avatar { width:44px; height:44px; border-radius:50%; background:#2FAEE0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; }
+  .back-btn { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:#2FAEE0; color:#fff; border:none; border-radius:30px; padding:12px 24px; font-size:15px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(47,174,224,.4); z-index:150; display:flex; align-items:center; gap:6px; }
+  .back-btn:hover { background:#1a9ad0; }
   @media(max-width:600px){ .stats{grid-template-columns:repeat(2,1fr);} }
 </style>
 </head>
@@ -133,7 +135,7 @@
     <h2>Dernier joueur modifié</h2>
     <div class="last-player" id="last-player" onclick="go('joueur')">
       <div class="avatar" id="lp-avatar">?</div>
-      <div><div id="lp-name">Aucun joueur</div><div id="lp-cat" style="font-size:12px;color:#8fa3b8"></div></div>
+      <div><div id="lp-name">Aucun joueur</div><div id="lp-cat" style="font-size:12px;color:#666"></div></div>
     </div>
   </div>
   <div class="section">
@@ -141,6 +143,7 @@
     <div class="card"><ul class="feed" id="feed"></ul></div>
   </div>
 </main>
+<button class="back-btn" onclick="history.back()">← Retour</button>
 <script>
 const CATS=['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
 function load(k,fb){try{return JSON.parse(localStorage.getItem('fm.'+k))??fb;}catch(e){return fb;}}
@@ -156,9 +159,15 @@ if(!players.length){
   ];
   save('players',players);
 }
-function toggleMenu(){document.getElementById('menu').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');}
+function toggleMenu(){
+  const menu=document.getElementById('menu');
+  const overlay=document.getElementById('overlay');
+  menu.classList.toggle('open');
+  overlay.classList.toggle('open');
+}
 function go(page){
-  toggleMenu();
+  document.getElementById('menu').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
   if(page==='dashboard') return;
   const map={categories:'categories.html',matchs:'matchs.html',presences:'presences.html',convocations:'convocations.html',documents:'documents.html',parametres:'parametres.html',export:'export.html',joueur:'joueur.html'};
   if(map[page]) window.location.href=map[page];
@@ -195,7 +204,7 @@ function render(){
     const x=pad+i*(w-2*pad)/CATS.length; const bh=(h-2*pad)*v/maxC;
     ctx.fillStyle=v===0?'#c0392b':v<6?'#e67e22':'#2e9e5b';
     ctx.fillRect(x,h-pad-bh,(w-2*pad)/CATS.length-4,bh);
-    ctx.fillStyle='#8fa3b8'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+    ctx.fillStyle='#666'; ctx.font='10px sans-serif'; ctx.textAlign='center';
     ctx.fillText(CATS[i],x+(w-2*pad)/CATS.length/2-2,h-pad+12);
   });
   const coaches=load('coaches',[
