@@ -20,8 +20,6 @@
   .nav-header span { font-weight:700; font-size:16px; color:#2FAEE0; }
   nav a { display:block; color:#333; text-decoration:none; padding:16px 28px; font-size:16px; border-left:3px solid transparent; }
   nav a:hover, nav a.active { background:#f7fbff; color:#2FAEE0; border-left-color:#2FAEE0; }
-  nav .sub { padding-left:44px; font-size:14px; color:#777; }
-  nav .sub:hover { color:#2FAEE0; }
   main { max-width:880px; margin:0 auto; padding:48px 28px 120px; }
   h1 { font-size:28px; margin-bottom:36px; color:#2FAEE0; font-weight:600; }
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:28px; margin-bottom:56px; }
@@ -88,7 +86,6 @@
   </div>
   <a href="#" class="active" onclick="go('dashboard')">Tableau de bord</a>
   <a href="#" onclick="go('categories')">Catégories</a>
-  <a href="#" class="sub" onclick="go('u6')">U6</a><a href="#" class="sub" onclick="go('u7')">U7</a><a href="#" class="sub" onclick="go('u8')">U8</a><a href="#" class="sub" onclick="go('u9')">U9</a><a href="#" class="sub" onclick="go('u10')">U10</a><a href="#" class="sub" onclick="go('u11')">U11</a><a href="#" class="sub" onclick="go('u12')">U12</a><a href="#" class="sub" onclick="go('u13')">U13</a><a href="#" class="sub" onclick="go('u14')">U14</a><a href="#" class="sub" onclick="go('u15')">U15</a><a href="#" class="sub" onclick="go('u16')">U16</a><a href="#" class="sub" onclick="go('u17')">U17</a><a href="#" class="sub" onclick="go('u18')">U18</a>
   <a href="#" onclick="go('matchs')">Matchs</a>
   <a href="#" onclick="go('presences')">Présences</a>
   <a href="#" onclick="go('convocations')">Convocations</a>
@@ -203,7 +200,6 @@ function go(page){
     joueur:'joueur.html'
   };
   if(map[page]) window.location.href=map[page];
-  else if(page.startsWith('u')) window.location.href='categorie.html?cat='+page.toUpperCase();
   else window.location.href='categories.html';
 }
 window.addEventListener('scroll',()=>{
