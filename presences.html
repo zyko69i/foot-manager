@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Présences — Foot Manager</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+  body { background:#f4f6f8; color:#1a1a2e; }
+  header { background:#1a1a2e; color:#fff; padding:14px 20px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:10; }
+  .burger { font-size:26px; cursor:pointer; background:none; border:none; color:#fff; }
+  header h1 { font-size:20px; font-weight:600; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:20; }
+  .overlay.open { display:block; }
+  nav { position:fixed; top:0; left:-280px; width:280px; height:100%; background:#1a1a2e; color:#fff; z-index:30; transition:left .25s; padding:20px 0; overflow-y:auto; }
+  nav.open { left:0; }
+  nav .close { font-size:24px; background:none; border:none; color:#fff; cursor:pointer; padding:0 20px 16px; display:block; }
+  nav a { display:block; padding:12px 20px; color:#d0d0e0; text-decoration:none; font-size:15px; }
+  nav a:hover, nav a.active { background:#2a2a45; color:#fff; }
+  nav .sub { padding-left:36px; font-size:13px; color:#9a9ab0; }
+  main { max-width:1100px; margin:0 auto; padding:20px; }
+  h2 { font-size:22px; margin-bottom:16px; }
+  .filters { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:20px; align-items:center; }
+  select, input[type=date] { padding:10px 14px; border:1px solid #ccc; border-radius:8px; font-size:14px; background:#fff; }
+  .btn { padding:10px 18px; border:none; border-radius:8px; font-size:14px; cursor:pointer; font-weight:600; }
+  .btn-primary { background:#2e7d32; color:#fff; }
+  .btn-primary:hover { background:#256628; }
+  .btn-secondary { background:#e0e0e0; color:#333; }
+  .sheet { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); overflow:hidden; margin-bottom:24px; }
+  .sheet-head { background:#1a1a2e; color:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+  .sheet-head h3 { font-size:16px; }
+  .sheet-head .meta { font-size:13px; color:#b0b0c8; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { padding:12px 16px; text-align:left; border-bottom:1px solid #eee; font-size:14px; }
+  th { background:#f8f8fc; font-weight:600; color:#555; }
+  tr:hover td { background:#fafafa; }
+  .check { width:44px; text-align:center; }
+  .check input { width:22px; height:22px; cursor:pointer; }
+  .status-ok { color:#2e7d32; font-weight:600; }
+  .status-late { color:#e65100; font-weight:600; }
+  .status-absent { color:#c62828; font-weight:600; }
+  .stats-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
+  .stat-card { background:#fff; border-radius:10px; padding:16px 20px; box-shadow:0 2px 8px rgba(0,0,0,.08); flex:1; min-width:140px; }
+  .stat-card .num { font-size:26px; font-weight:700; }
+  .stat-card .label { font-size:12px; color:#777; text-transform:uppercase; letter-spacing:.5px; }
+  .stat-card.green .num { color:#2e7d32; }
+  .stat-card.orange .num { color:#e65100; }
+  .stat-card.red .num { color:#c62828; }
+  .empty { text-align:center; padding:40px; color:#999; }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+  @media (max-width:600px) { table { font-size:13px; } th, td { padding:10px 8px; } }
+</style>
+</head>
+<body>
+<header>
+  <button class="burger" onclick="toggleNav()">☰</button>
+  <h1>Présences</h1>
+</header>
+<div class="overlay" id="overlay" onclick="toggleNav()"></div>
+<nav id="nav">
+  <button class="close" onclick="toggleNav()">✕</button>
+  <a href="index.html">Tableau de bord</a>
+  <a href="categories.html">Catégories</a>
+  <div class="sub">U6 à U18</div>
+  <a href="matchs.html">Matchs</a>
+  <a href="presences.html" class="active">Présences</a>
+  <a href="#" onclick="alert('Page à construire')">Convocations</a>
+  <a href="#" onclick="alert('Page à construire')">Documents</a>
+  <a href="#" onclick="alert('Page à construire')">Paramètres</a>
+  <a href="export.html">Export</a>
+</nav>
+<main>
+  <h2>Feuilles de présence</h2>
+  <div class="filters">
+    <select id="catFilter" onchange="render()">
+      <option value="">Toutes les catégories</option>
+    </select>
+    <input type="date" id="dateFilter" onchange="render()">
+    <button class="btn btn-primary" onclick="newSheet()">+ Nouvelle séance</button>
+  </div>
+  <div class="stats-row" id="stats"></div>
+  <div id="sheets"></div>
+</main>
+<script>
+const CATS = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
+const POSTES = ['Gardien','Défenseur central','Défenseur latéral droit','Défenseur latéral gauche','Milieu défensif','Milieu central','Milieu offensif','Ailier droit','Ailier gauche','Attaquant'];
+
+function load(k, fb){ try{ return JSON.parse(localStorage.getItem(k)) ?? fb; }catch(e){ return fb; } }
+function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+let players = load('fm_players', []);
+let sheets = load('fm_sheets', []);
+
+// Démo si vide
+if(!players.length){
+  const demo = [];
+  CATS.forEach((c,i)=>{
+    for(let j=0;j<Math.floor(Math.random()*6)+4;j++){
+      demo.push({id:'p'+i+j, nom:'Dupont', prenom:'J'+j, categorie:c, statut:['actif','actif','actif','blesse','suspendu'][Math.floor(Math.random()*5)], maillot:j+1, postes:[POSTES[Math.floor(Math.random()*10)]], postePref:POSTES[Math.floor(Math.random()*10)], licence:'LIC'+Math.floor(Math.random()*9000+1000), licenceVal:'2027-06-30', licenceStatut:'validee', certif:'ok', parents:[{nom:'Dupont', lien:'Père', tel:'060000000'+j}], urgContact:0, urgTel2:''});
+    }
+  });
+  players = demo; save('fm_players', players);
+}
+if(!sheets.length){
+  const s = [];
+  CATS.forEach(c=>{
+    s.push({id:'s'+c+'1', categorie:c, date:'2026-11-22', titre:'Entraînement samedi', joueurs:players.filter(p=>p.categorie===c).map(p=>({id:p.id, statut:Math.random()>.15?'present':(Math.random()>.5?'retard':'absent')}))});
+    s.push({id:'s'+c+'2', categorie:c, date:'2026-11-25', titre:'Match amical', joueurs:players.filter(p=>p.categorie===c).map(p=>({id:p.id, statut:Math.random()>.2?'present':(Math.random()>.5?'retard':'absent')}))});
+  });
+  sheets = s; save('fm_sheets', sheets);
+}
+
+const cf = document.getElementById('catFilter'), df = document.getElementById('dateFilter'), sh = document.getElementById('sheets'), st = document.getElementById('stats);
+CATS.forEach(c=>cf.add(new Option(c,c)));
+df.value = new Date().toISOString().slice(0,10);
+
+function toggleNav(){ document.getElementById('nav').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
+
+function newSheet(){
+  const cat = cf.value || prompt('Catégorie :', 'U11'); if(!cat) return;
+  const date = df.value || new Date().toISOString().slice(0,10);
+  const titre = prompt('Titre de la séance :', 'Entraînement') || 'Séance';
+  const joueurs = players.filter(p=>p.categorie===cat).map(p=>({id:p.id, statut:'present'}));
+  sheets.unshift({id:'s'+Date.now(), categorie:cat, date, titre, joueurs});
+  save('fm_sheets', sheets); render();
+}
+
+function setStatut(sid, pid, stt){
+  const sh = sheets.find(s=>s.id===sid); if(!sh) return;
+  const j = sh.joueurs.find(x=>x.id===pid); if(j) j.statut = stt;
+  save('fm_sheets', sheets); render();
+}
+
+function delSheet(sid){ if(!confirm('Supprimer cette feuille ?')) return; sheets = sheets.filter(s=>s.id!==sid); save('fm_sheets', sheets); render(); }
+
+function render(){
+  const cat = cf.value, date = df.value;
+  let list = sheets.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  if(cat) list = list.filter(s=>s.categorie===cat);
+  if(date) list = list.filter(s=>s.date===date);
+
+  // Stats globales
+  let tot=0, pre=0, ret=0, abs=0;
+  sheets.forEach(s=>s.joueurs.forEach(j=>{tot++; if(j.statut==='present')pre++; else if(j.statut==='retard')ret++; else abs++;}));
+  st.innerHTML = `
+    <div class="stat-card"><div class="num">${tot}</div><div class="label">Pointages totaux</div></div>
+    <div class="stat-card green"><div class="num">${pre}</div><div class="label">Présents</div></div>
+    <div class="stat-card orange"><div class="num">${ret}</div><div class="label">Retards</div></div>
+    <div class="stat-card red"><div class="num">${abs}</div><div class="label">Absents</div></div>`;
+
+  if(!list.length){ sh.innerHTML = '<div class="empty">Aucune feuille pour ces critères.</div>'; return; }
+  sh.innerHTML = '';
+  list.forEach(s=>{
+    const box = document.createElement('div'); box.className='sheet';
+    const head = document.createElement('div'); head.className='sheet-head';
+    head.innerHTML = `<div><h3>${s.titre}</h3><div class="meta">${s.categorie} — ${s.date}</div></div><button class="btn btn-secondary" onclick="delSheet('${s.id}')">Supprimer</button>`;
+    box.appendChild(head);
+    const tbl = document.createElement('table'); tbl.innerHTML = '<tr><th class="check">Présent</th><th class="check">Retard</th><th class="check">Absent</th><th>Joueur</th><th>Maillot</th><th>Statut fiche</th></tr>';
+    s.joueurs.forEach(j=>{
+      const p = players.find(x=>x.id===j.id); if(!p) return;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="check"><input type="radio" name="st${s.id}${j.id}" ${j.statut==='present'?'checked':''} onclick="setStatut('${s.id}','${j.id}','present')"></td>
+        <td class="check"><input type="radio" name="st${s.id}${j.id}" ${j.statut==='retard'?'checked':''} onclick="setStatut('${s.id}','${j.id}','retard')"></td>
+        <td class="check"><input type="radio" name="st${s.id}${j.id}" ${j.statut==='absent'?'checked':''} onclick="setStatut('${s.id}','${j.id}','absent')"></td>
+        <td><a href="joueur.html?id=${j.id}">${p.prenom} ${p.nom}</a></td>
+        <td>${p.maillot||'—'}</td>
+        <td class="status-${p.statut==='actif'?'ok':p.statut==='blesse'?'late':'absent'}">${p.statut}</td>`;
+      tbl.appendChild(tr);
+    });
+    box.appendChild(tbl);
+    sh.appendChild(box);
+  });
+}
+render();
+</script>
+</body>
+</html>
