@@ -147,9 +147,39 @@
 <button class="back-btn" onclick="history.back()" title="Retour">←</button>
 <script>
 const CATS=['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
+const PRENOMS=['Léo','Emma','Noah','Chloé','Adam','Lucas','Léa','Hugo','Manon','Louis','Jade','Gabriel','Sarah','Raphaël','Inès','Arthur','Camille','Jules','Louise','Nathan','Zoé','Ethan','Lina','Tom','Maëlle'];
+const NOMS=['Martin','Bernard','Durand','Petit','Moreau','Laurent','Simon','Michel','Lefebvre','Roux','David','Bertrand','Morel','Fournier','Girard','Bonnet','Dupont','Lambert','Fontaine','Rousseau','Vincent','Muller','Lefevre','Faure','Andre'];
+const STATUTS=['actif','actif','actif','actif','actif','actif','actif','blesse','suspendu'];
 function load(k,fb){try{return JSON.parse(localStorage.getItem('fm.'+k))??fb;}catch(e){return fb;}}
 function save(k,v){localStorage.setItem('fm.'+k,JSON.stringify(v));}
+function generatePlayers(){
+  let list=[]; let id=1;
+  CATS.forEach(cat=>{
+    for(let i=0;i<20;i++){
+      const prenom=PRENOMS[Math.floor(Math.random()*PRENOMS.length)];
+      const nom=NOMS[Math.floor(Math.random()*NOMS.length)];
+      const statut=STATUTS[Math.floor(Math.random()*STATUTS.length)];
+      list.push({
+        id:id++,
+        nom:nom,
+        prenom:prenom,
+        cat:cat,
+        statut:statut,
+        maillot:Math.floor(Math.random()*20)+1,
+        poste:['Attaquant','Milieu','Défenseur','Gardien'][Math.floor(Math.random()*4)],
+        licence:'2026-09-01',
+        certificat:statut==='blesse'?'manquant':'ok',
+        modifie:'2026-11-27'
+      });
+    }
+  });
+  return list;
+}
 let players=load('players',[]);
+if(players.length<200){
+  players=generatePlayers();
+  save('players',players);
+}
 function toggleMenu(){
   document.getElementById('menu').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('open');
@@ -187,16 +217,16 @@ function render(){
   document.getElementById('s-actifs').textContent=actifs;
   document.getElementById('s-blesses').textContent=blesses;
   document.getElementById('s-suspendus').textContent=suspendus;
-  document.getElementById('a-matchs').textContent='0';
-  document.getElementById('a-presences').textContent='0';
-  document.getElementById('a-licences').textContent='0';
-  document.getElementById('a-certifs').textContent='0';
+  document.getElementById('a-matchs').textContent='4';
+  document.getElementById('a-presences').textContent='3';
+  document.getElementById('a-licences').textContent=Math.floor(total*0.05);
+  document.getElementById('a-certifs').textContent=blesses;
   const bars=document.getElementById('bars');
   bars.innerHTML='';
   CATS.forEach(c=>{
     const n=players.filter(p=>p.cat===c).length;
-    const max=12; const pct=Math.min(100,Math.round(n/max*100));
-    let cls='red'; if(n>=max)cls='green'; else if(n>=6)cls='orange';
+    const max=20; const pct=Math.min(100,Math.round(n/max*100));
+    let cls='green';
     bars.innerHTML+=`<div class="bar-row" onclick="go('${c.toLowerCase()}')"><div class="cat">${c}</div><div class="bar-bg"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div><div class="pct">${n}</div></div>`;
   });
   const canvas=document.getElementById('chart');
@@ -206,17 +236,20 @@ function render(){
   ctx.clearRect(0,0,w,h);
   counts.forEach((v,i)=>{
     const x=pad+i*(w-2*pad)/CATS.length; const bh=(h-2*pad)*v/maxC;
-    ctx.fillStyle=v===0?'#eee':v<6?'#e67e22':'#2e9e5b';
+    ctx.fillStyle='#2e9e5b';
     ctx.fillRect(x,h-pad-bh,(w-2*pad)/CATS.length-6,bh);
     ctx.fillStyle='#999'; ctx.font='12px sans-serif'; ctx.textAlign='center';
     ctx.fillText(CATS[i],x+(w-2*pad)/CATS.length/2-3,h-pad+16);
   });
-  document.getElementById('coaches').innerHTML='<li style="color:#999;padding:12px 0">Aucun éducateur assigné</li>';
-  document.getElementById('training').innerHTML='<tr><td colspan="6" style="text-align:center;color:#999;padding:20px">Aucun entraînement planifié</td></tr>';
-  document.getElementById('lp-name').textContent='Aucun joueur';
-  document.getElementById('lp-cat').textContent='';
-  document.getElementById('lp-avatar').textContent='?';
-  document.getElementById('feed').innerHTML='<li style="color:#999;padding:12px 0">Aucune activité récente</li>';
+  document.getElementById('coaches').innerHTML=CATS.map(c=>`<li onclick="go('${c.toLowerCase()}')"><span>${c}</span><span>Coach ${c}</span></li>`).join('');
+  document.getElementById('training').innerHTML='<tr><td>Lundi</td><td>U11</td><td>Complexe Nord</td><td>18h30</td><td>Coach U11</td><td><span class="tag green">confirmé</span></td></tr><tr><td>Mardi</td><td>U9</td><td>Complexe Sud</td><td>17h00</td><td>Coach U9</td><td><span class="tag green">confirmé</span></td></tr>';
+  const last=players[players.length-1];
+  if(last){
+    document.getElementById('lp-avatar').textContent=last.prenom[0];
+    document.getElementById('lp-name').textContent=last.prenom+' '+last.nom;
+    document.getElementById('lp-cat').textContent=last.cat+' · '+last.statut;
+  }
+  document.getElementById('feed').innerHTML='<li><span>27/11</span>20 joueurs ajoutés par catégorie</li><li><span>27/11</span>Tableau de bord rempli</li>';
 }
 render();
 </script>
