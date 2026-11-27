@@ -3,380 +3,174 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Foot Manager — Matchs</title>
+<title>MIMOUNI Soccer Stats — Matchs</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
-  body { background:#f4f6f8; color:#1a1a2e; }
-  header { background:#1a1a2e; color:#fff; padding:14px 16px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:50; }
-  .burger { background:none; border:none; color:#fff; font-size:22px; cursor:pointer; }
-  header h1 { font-size:18px; font-weight:600; }
-  nav { position:fixed; top:0; left:-280px; width:280px; height:100vh; background:#1a1a2e; color:#fff; padding:20px 16px; transition:left .25s; z-index:100; overflow-y:auto; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
+  body { background:#fafafa; color:#222; }
+  header { background:#fff; color:#2FAEE0; height:72px; display:flex; align-items:center; padding:0 32px; border-bottom:1px solid #eee; }
+  .logo { font-weight:700; font-size:22px; }
+  .floating-burger { position:fixed; top:20px; left:20px; width:48px; height:48px; background:#fff; border:1px solid #e0e0e0; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,.06); display:none; align-items:center; justify-content:center; font-size:24px; color:#2FAEE0; cursor:pointer; z-index:100; }
+  .floating-burger.show { display:flex; }
+  #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.25); z-index:200; }
+  #overlay.open { display:block; }
+  nav { position:fixed; top:0; left:-280px; width:270px; height:100%; background:#fff; z-index:300; transition:left .25s; overflow-y:auto; padding:32px 0; box-shadow:2px 0 16px rgba(0,0,0,.08); }
   nav.open { left:0; }
-  nav .close { background:none; border:none; color:#fff; font-size:20px; float:right; cursor:pointer; }
-  nav a { display:block; color:#cbd5e1; text-decoration:none; padding:10px 8px; border-radius:6px; font-size:15px; }
-  nav a:hover { background:#2d2d44; color:#fff; }
-  nav .sub { padding-left:20px; font-size:13px; }
-  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:90; }
-  .overlay.open { display:block; }
-  main { max-width:900px; margin:0 auto; padding:16px; }
-  .tabs { display:flex; gap:4px; margin-bottom:16px; background:#e2e8f0; border-radius:8px; padding:4px; }
-  .tabs button { flex:1; border:none; background:transparent; padding:10px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; color:#475569; }
-  .tabs button.active { background:#fff; color:#1a1a2e; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+  nav a { display:block; color:#333; text-decoration:none; padding:16px 28px; font-size:16px; }
+  nav a:hover, nav a.active { background:#f7fbff; color:#2FAEE0; }
+  main { max-width:880px; margin:0 auto; padding:48px 28px 120px; }
+  h1 { font-size:28px; margin-bottom:24px; color:#2FAEE0; }
+  .tabs { display:flex; gap:8px; margin-bottom:28px; background:#f0f0f0; border-radius:12px; padding:6px; }
+  .tabs button { flex:1; border:none; background:transparent; padding:12px; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; color:#666; }
+  .tabs button.active { background:#fff; color:#2FAEE0; box-shadow:0 2px 6px rgba(0,0,0,.05); }
   .panel { display:none; }
   .panel.active { display:block; }
-  .card { background:#fff; border-radius:10px; padding:14px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); cursor:pointer; }
-  .card:hover { box-shadow:0 4px 12px rgba(0,0,0,.12); }
-  .card h3 { font-size:15px; margin-bottom:4px; }
-  .card .meta { font-size:13px; color:#64748b; }
-  .badge { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; }
-  .badge.avenir { background:#dbeafe; color:#1d4ed8; }
+  .card { background:#fff; border-radius:16px; padding:18px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,.04); cursor:pointer; border:1px solid #f0f0f0; }
+  .card:hover { border-color:#2FAEE0; }
+  .card h3 { font-size:16px; margin-bottom:6px; }
+  .card .meta { font-size:14px; color:#777; }
+  .badge { display:inline-block; font-size:12px; font-weight:700; padding:4px 10px; border-radius:12px; }
+  .badge.avenir { background:#e0f2fe; color:#0369a1; }
   .badge.victoire { background:#dcfce7; color:#166534; }
   .badge.defaite { background:#fee2e2; color:#991b1b; }
   .badge.nul { background:#fef9c3; color:#854d0e; }
-  .convoc-list { list-style:none; }
-  .convoc-list li { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:14px; }
-  .convoc-list li:last-child { border:none; }
-  .convoc-list .poste { font-size:11px; color:#64748b; background:#f1f5f9; padding:2px 6px; border-radius:4px; }
-  .bar-cell { padding:10px 0 !important; }
-  .bar { display:flex; height:36px; border-radius:8px; overflow:hidden; cursor:pointer; border:1px solid #ddd; }
-  .bar div { flex:1; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.3); transition:flex .2s; }
-  .bar .c { background:#1d4ed8; }
-  .bar .j { background:#2e7d32; }
-  .bar .n { background:#94a3b8; }
-  .bar .c.sel { flex:2; box-shadow:inset 0 0 0 3px #fff; }
-  .bar .j.sel { flex:2; box-shadow:inset 0 0 0 3px #fff; }
-  .bar .n.sel { flex:2; box-shadow:inset 0 0 0 3px #fff; }
-  .btn { border:none; border-radius:8px; padding:10px 16px; font-size:14px; font-weight:600; cursor:pointer; }
-  .btn.primary { background:#1a1a2e; color:#fff; }
-  .btn.primary:hover { background:#2d2d44; }
-  .btn.ghost { background:#e2e8f0; color:#1a1a2e; }
-  .form-row { margin-bottom:12px; }
-  .form-row label { display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569; }
-  .form-row input, .form-row select { width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; }
-  .form-row-duo { display:flex; gap:8px; }
+  .btn { border:none; border-radius:12px; padding:12px 18px; font-size:15px; font-weight:600; cursor:pointer; }
+  .btn.primary { background:#2FAEE0; color:#fff; }
+  .btn.ghost { background:#f0f0f0; color:#333; }
+  .form-row { margin-bottom:16px; }
+  .form-row label { display:block; font-size:14px; font-weight:600; margin-bottom:6px; color:#555; }
+  .form-row input, .form-row select { width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:15px; }
+  .form-row-duo { display:flex; gap:12px; }
   .form-row-duo > div { flex:1; }
-  .score-input { display:flex; align-items:center; gap:8px; justify-content:center; }
-  .score-input input { width:60px; text-align:center; font-size:20px; font-weight:700; }
-  .buteur-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
-  .buteur-row select { flex:1; }
-  .buteur-row input { width:50px; text-align:center; }
-  .empty { text-align:center; color:#94a3b8; padding:40px 16px; font-size:14px; }
-  .filter-bar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
-  .filter-bar select { padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; }
-  .legend { display:flex; gap:16px; margin-bottom:12px; font-size:13px; }
-  .legend span { display:flex; align-items:center; gap:6px; }
-  .legend i { width:16px; height:16px; border-radius:3px; display:inline-block; }
-  @media (max-width:600px) { .bar { height:30px; } .convoc-list li { flex-wrap:wrap; } .form-row-duo { flex-direction:column; } }
+  .empty { text-align:center; color:#aaa; padding:40px; font-size:15px; }
+  .filter-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+  .filter-bar select { padding:10px 14px; border:1px solid #ddd; border-radius:10px; font-size:14px; background:#fff; }
+  .back-btn { position:fixed; bottom:24px; left:20px; width:44px; height:44px; background:#fff; border:1px solid #e0e0e0; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,.06); display:flex; align-items:center; justify-content:center; font-size:20px; color:#2FAEE0; cursor:pointer; z-index:100; }
 </style>
 </head>
 <body>
 <header>
-  <button class="burger" onclick="toggleNav()">☰</button>
-  <h1>Matchs</h1>
+  <div class="logo">Matchs</div>
 </header>
-<nav id="nav">
-  <button class="close" onclick="toggleNav()">✕</button>
+<button class="floating-burger" id="floatBurger" onclick="toggleMenu()">&#9776;</button>
+<div id="overlay" onclick="toggleMenu()"></div>
+<nav id="menu">
   <a href="index.html">Tableau de bord</a>
   <a href="categories.html">Catégories</a>
-  <div class="sub">
-    <a href="categorie.html?cat=U6">U6</a><a href="categorie.html?cat=U7">U7</a><a href="categorie.html?cat=U8">U8</a><a href="categorie.html?cat=U9">U9</a><a href="categorie.html?cat=U10">U10</a><a href="categorie.html?cat=U11">U11</a><a href="categorie.html?cat=U12">U12</a><a href="categorie.html?cat=U13">U13</a><a href="categorie.html?cat=U14">U14</a><a href="categorie.html?cat=U15">U15</a><a href="categorie.html?cat=U16">U16</a><a href="categorie.html?cat=U17">U17</a><a href="categorie.html?cat=U18">U18</a>
-  </div>
-  <a href="matchs.html" style="background:#2d2d44;color:#fff">Matchs</a>
+  <a href="matchs.html" class="active">Matchs</a>
   <a href="presences.html">Présences</a>
   <a href="convocations.html">Convocations</a>
   <a href="documents.html">Documents</a>
   <a href="parametres.html">Paramètres</a>
   <a href="export.html">Export</a>
 </nav>
-<div class="overlay" id="overlay" onclick="toggleNav()"></div>
 <main>
+  <h1>Matchs</h1>
   <div class="tabs">
     <button class="active" onclick="showTab('calendrier',this)">Calendrier</button>
-    <button onclick="showTab('convocations',this)">Convocations</button>
     <button onclick="showTab('resultats',this)">Résultats</button>
-    <button onclick="showTab('buteurs',this)">Buteurs</button>
   </div>
-
   <div class="panel active" id="tab-calendrier">
     <div class="filter-bar">
-      <select id="filtreCat" onchange="renderCalendrier()">
-        <option value="">Toutes catégories</option>
-      </select>
-      <select id="filtreDiv" onchange="renderCalendrier()">
-        <option value="">Toutes divisions</option>
-      </select>
+      <select id="filtreCat" onchange="renderCalendrier()"><option value="">Toutes catégories</option></select>
     </div>
     <div id="listeCalendrier"></div>
-    <button class="btn primary" style="width:100%;margin-top:8px" onclick="ouvrirFormMatch()">+ Ajouter un match</button>
+    <button class="btn primary" style="width:100%;margin-top:12px" onclick="ouvrirFormMatch()">+ Ajouter un match</button>
   </div>
-
-  <div class="panel" id="tab-convocations">
-    <div class="filter-bar">
-      <select id="filtreCatConv" onchange="renderConvocations()">
-        <option value="">Toutes catégories</option>
-      </select>
-    </div>
-    <div class="legend"><span><i style="background:#1d4ed8"></i>Convoqué</span><span><i style="background:#2e7d32"></i>A joué</span><span><i style="background:#94a3b8"></i>Pas convoqué</span></div>
-    <div id="listeConvocations"></div>
-  </div>
-
   <div class="panel" id="tab-resultats">
     <div id="listeResultats"></div>
   </div>
-
-  <div class="panel" id="tab-buteurs">
-    <div id="listeButeurs"></div>
-  </div>
 </main>
+<button class="back-btn" onclick="history.back()">←</button>
 
 <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px">
-  <div style="background:#fff;border-radius:12px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
-    <h2 style="font-size:17px;margin-bottom:16px">Nouveau match</h2>
+  <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto">
+    <h2 style="font-size:18px;margin-bottom:20px;color:#2FAEE0">Nouveau match</h2>
     <div class="form-row"><label>Catégorie</label><select id="mCat"></select></div>
-    <div class="form-row"><label>Division / Championnat</label>
-      <select id="mDiv"><option value="">— Choisir —</option></select>
-      <input type="text" id="mDivLibre" placeholder="Autre division (si pas dans la liste)" style="margin-top:6px">
-    </div>
     <div class="form-row"><label>Date</label><input type="date" id="mDate"></div>
     <div class="form-row-duo">
-      <div class="form-row"><label>Heure du match</label><input type="time" id="mHeure"></div>
-      <div class="form-row"><label>Heure de rendez-vous</label><input type="time" id="mRdv"></div>
+      <div class="form-row"><label>Heure</label><input type="time" id="mHeure"></div>
+      <div class="form-row"><label>RDV</label><input type="time" id="mRdv"></div>
     </div>
-    <div class="form-row"><label>Lieu</label><input type="text" id="mLieu" placeholder="Terrain / stade"></div>
-    <div class="form-row"><label>Adversaire</label><input type="text" id="mAdv" placeholder="Nom de l'équipe adverse"></div>
+    <div class="form-row"><label>Lieu</label><input type="text" id="mLieu" placeholder="Terrain"></div>
+    <div class="form-row"><label>Adversaire</label><input type="text" id="mAdv" placeholder="Équipe adverse"></div>
     <div class="form-row"><label>Domicile / Extérieur</label><select id="mDomicile"><option value="dom">Domicile</option><option value="ext">Extérieur</option></select></div>
-    <div style="display:flex;gap:8px;margin-top:16px">
+    <div style="display:flex;gap:12px;margin-top:20px">
       <button class="btn ghost" style="flex:1" onclick="fermerModal()">Annuler</button>
       <button class="btn primary" style="flex:1" onclick="sauverMatch()">Enregistrer</button>
     </div>
   </div>
 </div>
 
-<div id="modalConvoc" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px">
-  <div style="background:#fff;border-radius:12px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
-    <h2 style="font-size:17px;margin-bottom:16px">Convocations</h2>
-    <div id="convocMatchInfo" class="meta" style="margin-bottom:12px"></div>
-    <div id="convocJoueurs"></div>
-    <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn ghost" style="flex:1" onclick="fermerModalConvoc()">Fermer</button>
-      <button class="btn primary" style="flex:1" onclick="sauverConvocations()">Enregistrer</button>
-    </div>
-  </div>
-</div>
-
-<div id="modalScore" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px">
-  <div style="background:#fff;border-radius:12px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
-    <h2 style="font-size:17px;margin-bottom:16px">Résultat</h2>
-    <div id="scoreMatchInfo" class="meta" style="margin-bottom:12px;text-align:center"></div>
-    <div class="score-input">
-      <input type="number" id="scoreNous" min="0" value="0">
-      <span style="font-size:20px;font-weight:700">—</span>
-      <input type="number" id="scoreEux" min="0" value="0">
-    </div>
-    <div id="buteursForm" style="margin-top:16px"></div>
-    <button class="btn ghost" style="width:100%;margin-top:8px" onclick="ajouterButeur()">+ Ajouter un buteur</button>
-    <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn ghost" style="flex:1" onclick="fermerModalScore()">Annuler</button>
-      <button class="btn primary" style="flex:1" onclick="sauverScore()">Enregistrer</button>
-    </div>
-  </div>
-</div>
-
 <script>
-const CAT = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
-const DIV = ['Ligue 1','Ligue 2','National','National 2','National 3','Régional 1','Régional 2','Régional 3','Départemental 1','Départemental 2','Départemental 3','Départemental 4','Promotion d\'Excellence','Excellence','Première Division','Deuxième Division','Troisième Division','Quatrième Division','Cinquième Division','Sixième Division','Septième Division','Huitième Division','Critérium U13','Critérium U15','Critérium U17','Critérium U19'];
-let db = JSON.parse(localStorage.getItem('footmanager') || '{"joueurs":[],"matchs":[],"convocations":{},"resultats":{},"tempsJeu":{}});
-if (!db.joueurs) db.joueurs = [];
-if (!db.matchs) db.matchs = [];
-if (!db.convocations) db.convocations = {};
-if (!db.resultats) db.resultats = {};
-if (!db.tempsJeu) db.tempsJeu = {};
+const CATS = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
+function load(k,fb){ try{ return JSON.parse(localStorage.getItem(k)) ?? fb; }catch(e){ return fb; } }
+function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+let matchs = load('fm.matchs', []);
+let players = load('fm.players', []);
 
-function save() { localStorage.setItem('footmanager', JSON.stringify(db)); }
-
-function toggleNav() {
-  document.getElementById('nav').classList.toggle('open);
-  document.getElementById('overlay').classList.toggle('open);
+function toggleMenu(){
+  document.getElementById('menu').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
 }
-
-function showTab(id, btn) {
+function showTab(id, btn){
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active);
-  btn.classList.add('active);
-  if (id === 'calendrier') renderCalendrier();
-  if (id === 'convocations') renderConvocations();
-  if (id === 'resultats') renderResultats();
-  if (id === 'buteurs') renderButeurs();
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='calendrier') renderCalendrier();
+  if(id==='resultats') renderResultats();
 }
-
-CAT.forEach(c => {
+CATS.forEach(c => {
   document.getElementById('filtreCat').innerHTML += `<option value="${c}">${c}</option>`;
-  document.getElementById('filtreCatConv').innerHTML += `<option value="${c}">${c}</option>`;
   document.getElementById('mCat').innerHTML += `<option value="${c}">${c}</option>`;
 });
-DIV.forEach(d => {
-  document.getElementById('filtreDiv').innerHTML += `<option value="${d}">${d}</option>`;
-  document.getElementById('mDiv').innerHTML += `<option value="${d}">${d}</option>`;
-});
-
-function renderCalendrier() {
+function renderCalendrier(){
   const cat = document.getElementById('filtreCat').value;
-  const div = document.getElementById('filtreDiv').value;
-  const list = db.matchs.filter(m => (!cat || m.cat === cat) && (!div || (m.division === div || m.divisionLibre === div))).sort((a,b) => new Date(a.date + 'T' + (a.heure||'00:00')) - new Date(b.date + 'T' + (b.heure||'00:00'));
-  const el = document.getElementById('listeCalendrier);
-  if (!list.length) { el.innerHTML = '<div class="empty">Aucun match programmé.</div>'; return; }
-  el.innerHTML = list.map(m => {
-    const res = db.resultats[m.id];
-    let badge = '<span class="badge avenir">À venir</span>';
-    if (res) {
-      const diff = res.nous - res.eux;
-      badge = diff > 0 ? '<span class="badge victoire">Victoire ' + res.nous + '-' + res.eux + '</span>' : diff < 0 ? '<span class="badge defaite">Défaite ' + res.nous + '-' + res.eux + '</span>' : '<span class="badge nul">Nul ' + res.nous + '-' + res.eux + '</span>';
-    }
-    const joueurs = (db.convocations[m.id] || []).length;
-    const divLabel = m.division || m.divisionLibre || '';
-    return `<div class="card" onclick="ouvrirConvocations('${m.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:start">
-        <div><h3>${m.domicile === 'dom' ? '🏠' : '✈️'} ${m.adversaire || 'Adversaire à définir'}</h3>
-        <div class="meta">${m.date} ${m.heure ? 'à ' + m.heure : ''}${m.rdv ? ' · RDV ' + m.rdv : ''} — ${m.lieu || 'Lieu à définir'} — ${m.cat}${divLabel ? ' · ' + divLabel : ''}</div></div>
-        ${badge}
-      </div>
-      <div class="meta" style="margin-top:6px">${joueurs} joueur(s) convoqué(s) — cliquer pour gérer</div>
-    </div>`;
-  }).join('');
+  const list = matchs.filter(m => !cat || m.cat === cat).sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  const el = document.getElementById('listeCalendrier');
+  if(!list.length){ el.innerHTML = '<div class="empty">Aucun match programmé.</div>'; return; }
+  el.innerHTML = list.map(m => `
+    <div class="card">
+      <h3>${m.domicile==='dom'?'🏠':'✈️'} ${m.adversaire || 'Adversaire'} — ${m.cat}</h3>
+      <div class="meta">${m.date || ''} ${m.heure || ''} · ${m.lieu || 'Lieu à définir'}</div>
+    </div>
+  `).join('');
 }
-
-function renderConvocations() {
-  const cat = document.getElementById('filtreCatConv').value;
-  const list = db.matchs.filter(m => !cat || m.cat === cat).sort((a,b) => new Date(a.date) - new Date(b.date));
-  const el = document.getElementById('listeConvocations);
-  if (!list.length) { el.innerHTML = '<div class="empty">Aucun match.</div>'; return; }
-  el.innerHTML = list.map(m => {
-    const conv = db.convocations[m.id] || [];
-    const joues = (db.tempsJeu[m.id] || {}).played || [];
-    const noms = conv.map(id => { const j = db.joueurs.find(x => x.id === id); return j ? j.prenom + ' ' + j.nom : '?'; }).join(', ');
-    return `<div class="card" onclick="ouvrirConvocations('${m.id}')">
-      <h3>${m.cat} — ${m.adversaire || 'Adversaire'} — ${m.date}</h3>
-      <div class="meta">${conv.length} convoqué(s)${noms ? ' : ' + noms : ''}</div>
-      <div class="meta" style="margin-top:4px">${joues.length} a joué</div>
-    </div>`;
-  }).join('');
+function renderResultats(){
+  document.getElementById('listeResultats').innerHTML = '<div class="empty">Résultats à venir.</div>';
 }
-
-function renderResultats() {
-  const list = db.matchs.filter(m => db.resultats[m.id]).sort((a,b) => new Date(b.date) - new Date(a.date));
-  const el = document.getElementById('listeResultats);
-  if (!list.length) { el.innerHTML = '<div class="empty">Aucun résultat enregistré.</div>'; return; }
-  el.innerHTML = list.map(m => {
-    const r = db.resultats[m.id];
-    const diff = r.nous - r.eux;
-    const badge = diff > 0 ? '<span class="badge victoire">V</span>' : diff < 0 ? '<span class="badge defaite">D</span>' : '<span class="badge nul">N</span>';
-    const buteurs = (r.buteurs || []).map(b => { const j = db.joueurs.find(x => x.id === b.id); return (j ? j.prenom + ' ' + j.nom : '?') + ' (' + b.nb + ')'; }).join(' · ');
-    return `<div class="card">
-      <div style="display:flex;justify-content:space-between"><h3>${m.cat} vs ${m.adversaire}</h3>${badge}</div>
-      <div class="meta">${m.date} — ${r.nous} - ${r.eux}</div>
-      ${buteurs ? '<div class="meta" style="margin-top:4px">⚽ ' + buteurs + '</div>' : ''}
-      <button class="btn ghost" style="margin-top:8px;font-size:12px" onclick="ouvrirScore('${m.id}')">Modifier</button>
-    </div>`;
-  }).join('');
-}
-
-function renderButeurs() {
-  const stats = {};
-  Object.values(db.resultats).forEach(r => (r.buteurs || []).forEach(b => { stats[b.id] = (stats[b.id] || 0) + b.nb; }));
-  const arr = Object.entries(stats).map(([id, nb]) => { const j = db.joueurs.find(x => x.id === id); return { j, nb }; }).filter(x => x.j).sort((a,b) => b.nb - a.nb);
-  const el = document.getElementById('listeButeurs);
-  if (!arr.length) { el.innerHTML = '<div class="empty">Aucun buteur enregistré.</div>'; return; }
-  el.innerHTML = arr.map((x, i) => `<div class="card" style="display:flex;align-items:center;gap:12px">
-    <div style="font-size:20px;font-weight:700;color:#94a3b8">${i+1}</div>
-    <div style="flex:1"><h3>${x.j.prenom} ${x.j.nom}</h3><div class="meta">${x.j.cat} · n°${x.j.maillot || '-'}</div></div>
-    <div style="font-size:22px;font-weight:700">${x.nb}</div>
-  </div>`).join('');
-}
-
-function ouvrirFormMatch() {
+function ouvrirFormMatch(){
   document.getElementById('mDate').value = '';
   document.getElementById('mHeure').value = '';
   document.getElementById('mRdv').value = '';
   document.getElementById('mLieu').value = '';
   document.getElementById('mAdv').value = '';
-  document.getElementById('mDiv').value = '';
-  document.getElementById('mDivLibre').value = '';
   document.getElementById('modal').style.display = 'flex';
 }
-function fermerModal() { document.getElementById('modal').style.display = 'none'; }
-function sauverMatch() {
-  const m = { id: 'm' + Date.now(), cat: document.getElementById('mCat').value, date: document.getElementById('mDate').value, heure: document.getElementById('mHeure').value, rdv: document.getElementById('mRdv').value, lieu: document.getElementById('mLieu').value, adversaire: document.getElementById('mAdv').value, domicile: document.getElementById('mDomicile').value, division: document.getElementById('mDiv').value, divisionLibre: document.getElementById('mDivLibre').value };
-  if (!m.date) { alert('La date est obligatoire.'); return; }
-  db.matchs.push(m); save(); fermerModal(); renderCalendrier();
+function fermerModal(){ document.getElementById('modal').style.display = 'none'; }
+function sauverMatch(){
+  const m = {
+    id: 'm' + Date.now(),
+    cat: document.getElementById('mCat').value,
+    date: document.getElementById('mDate').value,
+    heure: document.getElementById('mHeure').value,
+    rdv: document.getElementById('mRdv').value,
+    lieu: document.getElementById('mLieu').value,
+    adversaire: document.getElementById('mAdv').value,
+    domicile: document.getElementById('mDomicile').value
+  };
+  if(!m.date){ alert('La date est obligatoire.'); return; }
+  matchs.push(m);
+  save('fm.matchs', matchs);
+  fermerModal();
+  renderCalendrier();
 }
-
-let currentMatchId = null;
-function ouvrirConvocations(id) {
-  currentMatchId = id;
-  const m = db.matchs.find(x => x.id === id);
-  document.getElementById('convocMatchInfo').textContent = m.cat + ' vs ' + (m.adversaire || '?') + ' — ' + m.date;
-  const joueurs = db.joueurs.filter(j => j.cat === m.cat && j.statut !== 'parti' && j.statut !== 'suspendu' && j.statut !== 'blesse').sort((a,b) => (a.nom||'').localeCompare(b.nom||''));
-  const conv = new Set(db.convocations[id] || []);
-  const tj = db.tempsJeu[id] || { played: [], minutes: {} };
-  const played = new Set(tj.played || []);
-  document.getElementById('convocJoueurs').innerHTML = '<ul class="convoc-list">' + joueurs.map(j => {
-    const isConv = conv.has(j.id);
-    const isPlayed = played.has(j.id);
-    const mins = tj.minutes[j.id] || 0;
-    const bar = `<div class="bar" onclick="cycleConvoc('${j.id}')"><div class="c ${isConv?'sel':''}">Convoqué</div><div class="j ${isPlayed?'sel':''}">Joué</div><div class="n ${!isConv?'sel':''}">Non</div></div>`;
-    return `<li><div style="flex:1"><span>${j.prenom} ${j.nom}</span> <span class="poste">n°${j.maillot||'-'}</span></div><div class="bar-cell" style="width:180px">${bar}</div><div style="width:60px;text-align:center;font-size:13px">${isPlayed?mins+' min':''}</div></li>`;
-  }).join('') + '</ul>';
-  document.getElementById('modalConvoc').style.display = 'flex';
-}
-function cycleConvoc(pid) {
-  if (!db.convocations[currentMatchId]) db.convocations[currentMatchId] = [];
-  if (!db.tempsJeu[currentMatchId]) db.tempsJeu[currentMatchId] = { played: [], minutes: {} };
-  const conv = db.convocations[currentMatchId];
-  const tj = db.tempsJeu[currentMatchId];
-  const i = conv.indexOf(pid);
-  if (i >= 0) {
-    conv.splice(i, 1);
-    const pi = tj.played.indexOf(pid);
-    if (pi >= 0) tj.played.splice(pi, 1);
-    delete tj.minutes[pid];
-  } else {
-    conv.push(pid);
-  }
-  save();
-  ouvrirConvocations(currentMatchId);
-}
-function fermerModalConvoc() { document.getElementById('modalConvoc').style.display = 'none'; renderCalendrier(); renderConvocations(); }
-function sauverConvocations() { fermerModalConvoc(); }
-
-function ouvrirScore(id) {
-  currentMatchId = id;
-  const m = db.matchs.find(x => x.id === id);
-  const r = db.resultats[id] || { nous: 0, eux: 0, buteurs: [] };
-  document.getElementById('scoreMatchInfo').textContent = m.cat + ' vs ' + (m.adversaire || '?') + ' — ' + m.date;
-  document.getElementById('scoreNous').value = r.nous;
-  document.getElementById('scoreEux').value = r.eux;
-  const joueurs = db.joueurs.filter(j => j.cat === m.cat);
-  let html = '';
-  (r.buteurs || []).forEach((b, i) => {
-    html += `<div class="buteur-row"><select data-idx="${i}">${joueurs.map(j => `<option value="${j.id}" ${j.id===b.id?'selected':''}>${j.prenom} ${j.nom}</option>`).join('')}</select><input type="number" min="1" value="${b.nb}" data-idx="${i}"><button class="btn ghost" style="padding:4px 8px;font-size:12px" onclick="this.parentNode.remove()">✕</button></div>`;
-  });
-  document.getElementById('buteursForm').innerHTML = html;
-  document.getElementById('modalScore').style.display = 'flex';
-}
-function fermerModalScore() { document.getElementById('modalScore').style.display = 'none'; }
-function ajouterButeur() {
-  const m = db.matchs.find(x => x.id === currentMatchId);
-  const joueurs = db.joueurs.filter(j => j.cat === m.cat);
-  const i = document.querySelectorAll('#buteursForm .buteur-row').length;
-  document.getElementById('buteursForm').innerHTML += `<div class="buteur-row"><select data-idx="${i}">${joueurs.map(j => `<option value="${j.id}">${j.prenom} ${j.nom}</option>`).join('')}</select><input type="number" min="1" value="1" data-idx="${i}"><button class="btn ghost" style="padding:4px 8px;font-size:12px" onclick="this.parentNode.remove()">✕</button></div>`;
-}
-function sauverScore() {
-  const buteurs = [...document.querySelectorAll('#buteursForm .buteur-row')].map(row => ({ id: row.querySelector('select').value, nb: parseInt(row.querySelector('input').value) || 1 }));
-  db.resultats[currentMatchId] = { nous: parseInt(document.getElementById('scoreNous').value) || 0, eux: parseInt(document.getElementById('scoreEux').value) || 0, buteurs };
-  save(); fermerModalScore(); renderCalendrier(); renderResultats(); renderButeurs();
-}
-
+window.addEventListener('scroll',()=>{
+  const burger = document.getElementById('floatBurger');
+  if(window.scrollY > 100) burger.classList.add('show');
+  else burger.classList.remove('show');
+});
 renderCalendrier();
 </script>
 </body>
