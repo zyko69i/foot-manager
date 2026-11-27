@@ -8,70 +8,70 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
   body { background:#fafafa; color:#222; }
-  header { background:#fff; color:#2FAEE0; height:64px; display:flex; align-items:center; padding:0 24px; position:relative; z-index:50; border-bottom:1px solid #eee; }
-  .logo { font-weight:700; font-size:20px; letter-spacing:0.5px; }
-  .floating-burger { position:fixed; top:16px; left:16px; width:44px; height:44px; background:#fff; border:1px solid #e0e0e0; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,.08); display:none; align-items:center; justify-content:center; font-size:22px; color:#2FAEE0; cursor:pointer; z-index:100; transition:opacity .2s; }
+  header { background:#fff; color:#2FAEE0; height:72px; display:flex; align-items:center; padding:0 32px; position:relative; z-index:50; border-bottom:1px solid #eee; }
+  .logo { font-weight:700; font-size:22px; letter-spacing:0.5px; }
+  .floating-burger { position:fixed; top:20px; left:20px; width:48px; height:48px; background:#fff; border:1px solid #e0e0e0; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,.06); display:none; align-items:center; justify-content:center; font-size:24px; color:#2FAEE0; cursor:pointer; z-index:100; }
   .floating-burger.show { display:flex; }
-  #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:200; }
+  #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.25); z-index:200; }
   #overlay.open { display:block; }
-  nav { position:fixed; top:0; left:-280px; width:260px; height:100%; background:#fff; z-index:300; transition:left .25s ease; overflow-y:auto; padding:24px 0; box-shadow:2px 0 12px rgba(0,0,0,.1); }
+  nav { position:fixed; top:0; left:-280px; width:270px; height:100%; background:#fff; z-index:300; transition:left .25s ease; overflow-y:auto; padding:32px 0; box-shadow:2px 0 16px rgba(0,0,0,.08); }
   nav.open { left:0; }
-  nav .close { color:#2FAEE0; background:none; border:none; font-size:20px; padding:8px 20px; cursor:pointer; display:block; width:100%; text-align:left; }
-  nav a { display:block; color:#333; text-decoration:none; padding:14px 24px; font-size:15px; border-left:3px solid transparent; }
+  nav .close { color:#2FAEE0; background:none; border:none; font-size:20px; padding:12px 24px; cursor:pointer; display:block; width:100%; text-align:left; }
+  nav a { display:block; color:#333; text-decoration:none; padding:16px 28px; font-size:16px; border-left:3px solid transparent; }
   nav a:hover, nav a.active { background:#f7fbff; color:#2FAEE0; border-left-color:#2FAEE0; }
-  nav .sub { padding-left:40px; font-size:13.5px; color:#777; }
+  nav .sub { padding-left:44px; font-size:14px; color:#777; }
   nav .sub:hover { color:#2FAEE0; }
-  main { max-width:900px; margin:0 auto; padding:32px 20px 100px; }
-  h1 { font-size:26px; margin-bottom:24px; color:#2FAEE0; font-weight:600; }
-  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:20px; margin-bottom:40px; }
-  .stat { background:#fff; border-radius:16px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,.04); cursor:pointer; transition:transform .15s, box-shadow .15s; border:1px solid #f0f0f0; }
-  .stat:hover { transform:translateY(-3px); box-shadow:0 6px 16px rgba(0,0,0,.06); }
-  .stat .num { font-size:32px; font-weight:700; color:#2FAEE0; }
-  .stat .label { font-size:13px; color:#888; text-transform:uppercase; letter-spacing:.5px; margin-top:6px; }
+  main { max-width:880px; margin:0 auto; padding:48px 28px 120px; }
+  h1 { font-size:28px; margin-bottom:36px; color:#2FAEE0; font-weight:600; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:28px; margin-bottom:56px; }
+  .stat { background:#fff; border-radius:20px; padding:28px; box-shadow:0 4px 12px rgba(0,0,0,.03); cursor:pointer; transition:transform .15s, box-shadow .15s; border:1px solid #f0f0f0; }
+  .stat:hover { transform:translateY(-4px); box-shadow:0 8px 20px rgba(0,0,0,.05); }
+  .stat .num { font-size:36px; font-weight:700; color:#2FAEE0; }
+  .stat .label { font-size:14px; color:#999; text-transform:uppercase; letter-spacing:.6px; margin-top:8px; }
   .stat.actifs .num { color:#2e9e5b; }
   .stat.blesses .num { color:#e67e22; }
   .stat.suspendus .num { color:#c0392b; }
-  .section { margin-bottom:40px; }
-  .section h2 { font-size:16px; text-transform:uppercase; letter-spacing:1px; color:#2FAEE0; margin-bottom:16px; font-weight:600; }
-  .alerts { display:flex; flex-direction:column; gap:12px; }
-  .alert { background:#fff; border-radius:12px; padding:16px 18px; display:flex; align-items:center; gap:14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.04); border-left:4px solid #c0392b; }
+  .section { margin-bottom:56px; }
+  .section h2 { font-size:17px; text-transform:uppercase; letter-spacing:1.2px; color:#2FAEE0; margin-bottom:20px; font-weight:600; }
+  .alerts { display:flex; flex-direction:column; gap:16px; }
+  .alert { background:#fff; border-radius:16px; padding:20px 22px; display:flex; align-items:center; gap:16px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.03); border-left:4px solid #c0392b; }
   .alert.orange { border-left-color:#e67e22; }
   .alert.blue { border-left-color:#2FAEE0; }
-  .alert .count { font-weight:700; font-size:22px; min-width:36px; color:#2FAEE0; }
+  .alert .count { font-weight:700; font-size:24px; min-width:40px; color:#2FAEE0; }
   .alert .txt { font-size:15px; flex:1; }
-  .alert .go { color:#2FAEE0; font-size:13px; }
-  .bars { display:flex; flex-direction:column; gap:10px; }
-  .bar-row { display:flex; align-items:center; gap:12px; cursor:pointer; padding:6px 0; }
-  .bar-row .cat { width:44px; font-weight:600; font-size:14px; color:#2FAEE0; }
-  .bar-bg { flex:1; height:20px; background:#eef6fb; border-radius:10px; overflow:hidden; }
-  .bar-fill { height:100%; border-radius:10px; transition:width .4s; }
+  .alert .go { color:#2FAEE0; font-size:14px; }
+  .bars { display:flex; flex-direction:column; gap:14px; }
+  .bar-row { display:flex; align-items:center; gap:16px; cursor:pointer; padding:8px 0; }
+  .bar-row .cat { width:50px; font-weight:600; font-size:15px; color:#2FAEE0; }
+  .bar-bg { flex:1; height:22px; background:#eef6fb; border-radius:11px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:11px; transition:width .4s; }
   .bar-fill.green { background:#2e9e5b; }
   .bar-fill.orange { background:#e67e22; }
   .bar-fill.red { background:#c0392b; }
-  .bar-row .pct { width:40px; font-size:13px; color:#888; text-align:right; }
-  .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:24px; }
-  .card { background:#fff; border-radius:16px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,.04); border:1px solid #f0f0f0; }
-  .card h3 { font-size:15px; margin-bottom:14px; color:#2FAEE0; }
+  .bar-row .pct { width:44px; font-size:14px; color:#999; text-align:right; }
+  .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:32px; }
+  .card { background:#fff; border-radius:20px; padding:24px; box-shadow:0 4px 12px rgba(0,0,0,.03); border:1px solid #f0f0f0; }
+  .card h3 { font-size:16px; margin-bottom:18px; color:#2FAEE0; }
   .feed { list-style:none; }
-  .feed li { padding:10px 0; border-bottom:1px solid #f5f5f5; font-size:14px; color:#444; }
-  .feed li span { color:#aaa; font-size:12px; margin-right:10px; }
+  .feed li { padding:12px 0; border-bottom:1px solid #f5f5f5; font-size:15px; color:#555; }
+  .feed li span { color:#bbb; font-size:13px; margin-right:12px; }
   .coach-list { list-style:none; }
-  .coach-list li { padding:8px 0; font-size:14px; display:flex; justify-content:space-between; cursor:pointer; }
+  .coach-list li { padding:10px 0; font-size:15px; display:flex; justify-content:space-between; cursor:pointer; }
   .coach-list li:hover { color:#2FAEE0; }
-  .training { width:100%; border-collapse:collapse; font-size:14px; }
-  .training th { text-align:left; padding:10px; background:#f7fbff; color:#2FAEE0; font-weight:600; }
-  .training td { padding:10px; border-bottom:1px solid #f5f5f5; cursor:pointer; }
+  .training { width:100%; border-collapse:collapse; font-size:15px; }
+  .training th { text-align:left; padding:12px; background:#f7fbff; color:#2FAEE0; font-weight:600; }
+  .training td { padding:12px; border-bottom:1px solid #f5f5f5; cursor:pointer; }
   .training tr:hover td { background:#fafcff; }
-  .tag { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600; }
+  .tag { display:inline-block; padding:4px 12px; border-radius:14px; font-size:12px; font-weight:600; }
   .tag.green { background:#e6f7ed; color:#2e9e5b; }
   .tag.orange { background:#fff3e0; color:#e67e22; }
   .tag.red { background:#fdecea; color:#c0392b; }
-  .last-player { background:#fff; border-radius:16px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,.04); cursor:pointer; display:flex; align-items:center; gap:14px; border:1px solid #f0f0f0; }
+  .last-player { background:#fff; border-radius:20px; padding:24px; box-shadow:0 4px 12px rgba(0,0,0,.03); cursor:pointer; display:flex; align-items:center; gap:16px; border:1px solid #f0f0f0; }
   .last-player:hover { border-color:#2FAEE0; }
-  .avatar { width:48px; height:48px; border-radius:50%; background:#2FAEE0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:20px; }
-  .back-btn { position:fixed; bottom:20px; left:16px; width:40px; height:40px; background:#fff; border:1px solid #e0e0e0; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,.08); display:flex; align-items:center; justify-content:center; font-size:18px; color:#2FAEE0; cursor:pointer; z-index:100; }
+  .avatar { width:52px; height:52px; border-radius:50%; background:#2FAEE0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:22px; }
+  .back-btn { position:fixed; bottom:24px; left:20px; width:44px; height:44px; background:#fff; border:1px solid #e0e0e0; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,.06); display:flex; align-items:center; justify-content:center; font-size:20px; color:#2FAEE0; cursor:pointer; z-index:100; }
   .back-btn:hover { background:#f7fbff; }
-  @media(max-width:600px){ .stats{grid-template-columns:repeat(2,1fr); gap:12px;} main{padding:24px 16px 90px;} }
+  @media(max-width:600px){ .stats{grid-template-columns:repeat(2,1fr); gap:16px;} main{padding:32px 16px 100px;} }
 </style>
 </head>
 <body>
@@ -136,7 +136,7 @@
     <h2>Dernier joueur modifié</h2>
     <div class="last-player" id="last-player" onclick="go('joueur')">
       <div class="avatar" id="lp-avatar">?</div>
-      <div><div id="lp-name">Aucun joueur</div><div id="lp-cat" style="font-size:13px;color:#888"></div></div>
+      <div><div id="lp-name">Aucun joueur</div><div id="lp-cat" style="font-size:14px;color:#999"></div></div>
     </div>
   </div>
   <div class="section">
@@ -150,16 +150,6 @@ const CATS=['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17',
 function load(k,fb){try{return JSON.parse(localStorage.getItem('fm.'+k))??fb;}catch(e){return fb;}}
 function save(k,v){localStorage.setItem('fm.'+k,JSON.stringify(v));}
 let players=load('players',[]);
-if(!players.length){
-  players=[
-    {id:1,nom:'Martin',prenom:'Léo',cat:'U11',statut:'actif',maillot:7,poste:['Milieu central'],licence:'2026-09-15',certificat:'ok',modifie:'2026-11-26'},
-    {id:2,nom:'Bernard',prenom:'Emma',cat:'U9',statut:'blesse',maillot:3,poste:['Gardien'],licence:'2026-06-01',certificat:'manquant',modifie:'2026-11-25'},
-    {id:3,nom:'Durand',prenom:'Noah',cat:'U13',statut:'actif',maillot:10,poste:['Attaquant'],licence:'2025-12-20',certificat:'ok',modifie:'2026-11-24'},
-    {id:4,nom:'Petit',prenom:'Chloé',cat:'U7',statut:'suspendu',maillot:5,poste:['Défenseur latéral droit'],licence:'2026-10-01',certificat:'ok',modifie:'2026-11-23'},
-    {id:5,nom:'Moreau',prenom:'Adam',cat:'U15',statut:'actif',maillot:9,poste:['Ailier gauche'],licence:'2026-08-30',certificat:'attente',modifie:'2026-11-22'}
-  ];
-  save('players',players);
-}
 function toggleMenu(){
   document.getElementById('menu').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('open');
@@ -180,16 +170,13 @@ function go(page){
   };
   if(map[page]) window.location.href=map[page];
   else if(page.startsWith('u')) window.location.href='categorie.html?cat='+page.toUpperCase();
-  else if(page.startsWith('joueurs')) window.location.href='categories.html';
   else window.location.href='categories.html';
 }
-let lastScroll=0;
 window.addEventListener('scroll',()=>{
   const y=window.scrollY;
   const burger=document.getElementById('floatBurger');
-  if(y>80) burger.classList.add('show');
+  if(y>100) burger.classList.add('show');
   else burger.classList.remove('show');
-  lastScroll=y;
 });
 function render(){
   const total=players.length;
@@ -200,10 +187,10 @@ function render(){
   document.getElementById('s-actifs').textContent=actifs;
   document.getElementById('s-blesses').textContent=blesses;
   document.getElementById('s-suspendus').textContent=suspendus;
-  document.getElementById('a-matchs').textContent='3';
-  document.getElementById('a-presences').textContent='2';
-  document.getElementById('a-licences').textContent=players.filter(p=>p.licence<'2026-06-01').length||'1';
-  document.getElementById('a-certifs').textContent=players.filter(p=>p.certificat!=='ok').length;
+  document.getElementById('a-matchs').textContent='0';
+  document.getElementById('a-presences').textContent='0';
+  document.getElementById('a-licences').textContent='0';
+  document.getElementById('a-certifs').textContent='0';
   const bars=document.getElementById('bars');
   bars.innerHTML='';
   CATS.forEach(c=>{
@@ -219,35 +206,17 @@ function render(){
   ctx.clearRect(0,0,w,h);
   counts.forEach((v,i)=>{
     const x=pad+i*(w-2*pad)/CATS.length; const bh=(h-2*pad)*v/maxC;
-    ctx.fillStyle=v===0?'#c0392b':v<6?'#e67e22':'#2e9e5b';
-    ctx.fillRect(x,h-pad-bh,(w-2*pad)/CATS.length-4,bh);
-    ctx.fillStyle='#888'; ctx.font='11px sans-serif'; ctx.textAlign='center';
-    ctx.fillText(CATS[i],x+(w-2*pad)/CATS.length/2-2,h-pad+14);
+    ctx.fillStyle=v===0?'#eee':v<6?'#e67e22':'#2e9e5b';
+    ctx.fillRect(x,h-pad-bh,(w-2*pad)/CATS.length-6,bh);
+    ctx.fillStyle='#999'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(CATS[i],x+(w-2*pad)/CATS.length/2-3,h-pad+16);
   });
-  const coaches=load('coaches',[
-    {cat:'U6',nom:'M. Roux'},{cat:'U7',nom:'Mme Lefèvre'},{cat:'U8',nom:'M. Petit'},{cat:'U9',nom:'M. Roux'},{cat:'U10',nom:'Mme Bernard'},{cat:'U11',nom:'M. Durand'},{cat:'U12',nom:'M. Moreau'},{cat:'U13',nom:'Mme Simon'},{cat:'U14',nom:'M. Petit'},{cat:'U15',nom:'M. Roux'},{cat:'U16',nom:'—'},{cat:'U17',nom:'—'},{cat:'U18',nom:'—'}
-  ]);
-  document.getElementById('coaches').innerHTML=coaches.map(c=>`<li onclick="go('${c.cat.toLowerCase()}')"><span>${c.cat}</span><span>${c.nom}</span></li>`).join('');
-  const train=load('training',[
-    {jour:'Lundi',cat:'U11',terrain:'Complexe Nord',heure:'18h30',educ:'M. Durand',statut:'confirmé'},
-    {jour:'Mardi',cat:'U9',terrain:'Complexe Sud',heure:'17h00',educ:'M. Roux',statut:'confirmé'},
-    {jour:'Mercredi',cat:'U13',terrain:'Complexe Nord',heure:'19h00',educ:'Mme Simon',statut:'à confirmer'},
-    {jour:'Jeudi',cat:'U7',terrain:'Complexe Sud',heure:'16h30',educ:'Mme Lefèvre',statut:'confirmé'},
-    {jour:'Vendredi',cat:'U15',terrain:'Complexe Nord',heure:'20h00',educ:'M. Roux',statut:'confirmé'}
-  ]);
-  document.getElementById('training').innerHTML=train.map(t=>`<tr onclick="go('planning')"><td>${t.jour}</td><td>${t.cat}</td><td>${t.terrain}</td><td>${t.heure}</td><td>${t.educ}</td><td><span class="tag ${t.statut==='confirmé'?'green':'orange'}">${t.statut}</span></td></tr>`).join('');
-  const last=[...players].sort((a,b)=>b.modifie.localeCompare(a.modifie))[0];
-  if(last){
-    document.getElementById('lp-avatar').textContent=last.prenom[0];
-    document.getElementById('lp-name').textContent=last.prenom+' '+last.nom;
-    document.getElementById('lp-cat').textContent=last.cat+' · modifié le '+last.modifie;
-  }
-  document.getElementById('feed').innerHTML=[
-    '<li><span>26/11</span>Léo Martin ajouté en U11</li>',
-    '<li><span>25/11</span>Emma Bernard marquée blessée</li>',
-    '<li><span>24/11</span>Planning U13 mis à jour</li>',
-    '<li><span>23/11</span>Chloé Petit suspendue 1 match</li>'
-  ].join('');
+  document.getElementById('coaches').innerHTML='<li style="color:#999;padding:12px 0">Aucun éducateur assigné</li>';
+  document.getElementById('training').innerHTML='<tr><td colspan="6" style="text-align:center;color:#999;padding:20px">Aucun entraînement planifié</td></tr>';
+  document.getElementById('lp-name').textContent='Aucun joueur';
+  document.getElementById('lp-cat').textContent='';
+  document.getElementById('lp-avatar').textContent='?';
+  document.getElementById('feed').innerHTML='<li style="color:#999;padding:12px 0">Aucune activité récente</li>';
 }
 render();
 </script>
