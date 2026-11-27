@@ -25,7 +25,11 @@
   .count { font-size:13px; color:#6b7c93; }
   .btn-add { background:#2e9e5b; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer; }
   .btn-add:hover { background:#258f4f; }
-  .search { width:100%; padding:10px 14px; border:1px solid #d5dde8; border-radius:8px; font-size:14px; margin-bottom:16px; background:#fff; }
+  .btn-plan { background:#3d9cf0; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer; }
+  .btn-plan:hover { background:#2b84d6; }
+  .tools { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .search { flex:1; min-width:180px; padding:10px 14px; border:1px solid #d5dde8; border-radius:8px; font-size:14px; background:#fff; }
+  select { padding:10px 14px; border:1px solid #d5dde8; border-radius:8px; font-size:14px; background:#fff; }
   .player { background:#fff; border-radius:10px; padding:12px 16px; box-shadow:0 1px 4px rgba(0,0,0,.08); display:flex; align-items:center; gap:12px; cursor:pointer; margin-bottom:10px; transition:box-shadow .15s; }
   .player:hover { box-shadow:0 3px 10px rgba(0,0,0,.12); }
   .avatar { width:44px; height:44px; border-radius:50%; background:#3d9cf0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; flex-shrink:0; overflow:hidden; }
@@ -33,6 +37,10 @@
   .info { flex:1; min-width:0; }
   .info .name { font-weight:600; font-size:15px; }
   .info .meta { font-size:12px; color:#6b7c93; margin-top:2px; }
+  .flags { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+  .flag { font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; }
+  .flag.lic { background:#fbd9d5; color:#c0392b; }
+  .flag.cert { background:#fde8d0; color:#e67e22; }
   .maillot { font-size:13px; color:#0f2744; font-weight:600; min-width:28px; text-align:center; }
   .tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
   .tag.actif { background:#d9f2e6; color:#2e9e5b; }
@@ -40,7 +48,7 @@
   .tag.suspendu { background:#fbd9d5; color:#c0392b; }
   .tag.parti { background:#e2e8f0; color:#6b7c93; }
   .empty { text-align:center; color:#6b7c93; padding:40px 16px; font-size:14px; }
-  @media(max-width:600px){ .top{flex-direction:column; align-items:flex-start;} }
+  @media(max-width:600px){ .top{flex-direction:column; align-items:flex-start;} .tools{flex-direction:column;} }
 </style>
 </head>
 <body>
@@ -67,37 +75,58 @@
       <h1 id="cat-title">Catégorie</h1>
       <div class="count" id="cat-count">0 joueurs inscrits</div>
     </div>
-    <button class="btn-add" onclick="ajouterJoueur()">+ Ajouter un joueur</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-plan" onclick="location.href='planning.html?cat='+cat">Planning</button>
+      <button class="btn-add" onclick="ajouterJoueur()">+ Ajouter un joueur</button>
+    </div>
   </div>
-  <input class="search" type="text" placeholder="Rechercher un joueur..." oninput="filterPlayers(this.value)">
+  <div class="tools">
+    <input class="search" type="text" placeholder="Rechercher un joueur..." oninput="filterPlayers(this.value)">
+    <select onchange="sortPlayers(this.value)">
+      <option value="nom">Trier par nom</option>
+      <option value="statut">Trier par statut</option>
+      <option value="poste">Trier par poste</option>
+      <option value="maillot">Trier par maillot</option>
+    </select>
+  </div>
   <div id="list"></div>
 </main>
 <script>
 const CATS=['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
 function load(k,fb){try{return JSON.parse(localStorage.getItem('fm.'+k))??fb;}catch(e){return fb;}}
-function save(k,v){localStorage.setItem('fm.'+k,JSON.stringify(v));}
 let players=load('players',[]);
 const params=new URLSearchParams(location.search);
 let cat=(params.get('cat')||'U11').toUpperCase();
 if(!CATS.includes(cat))cat='U11';
+let sortBy='nom';
 function toggleMenu(){document.getElementById('menu').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');}
 function go(page){toggleMenu();if(page.startsWith('u')){location.href='categorie.html?cat='+page.toUpperCase();}else{alert('Navigation vers : '+page+' (page à construire)');}}
 function ajouterJoueur(){location.href='joueur.html?cat='+cat+'&new=1';}
 function filterPlayers(q){
-  const rows=document.querySelectorAll('.player');
+  const rows=document.querySelectorAll('.player);
   rows.forEach(r=>{r.style.display=r.dataset.name.toLowerCase().includes(q.toLowerCase())?'':'none';});
 }
+function sortPlayers(v){sortBy=v;render();}
+function licenceExpiree(p){return p.licence&&p.licence<'2026-06-01';}
+function certifManquant(p){return p.certificat!=='ok';}
 function render(){
   const list=document.getElementById('list);
-  const cp=players.filter(p=>p.cat===cat);
+  let cp=players.filter(p=>p.cat===cat);
+  if(sortBy==='nom')cp.sort((a,b)=>(a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom));
+  else if(sortBy==='statut')cp.sort((a,b)=>a.statut.localeCompare(b.statut));
+  else if(sortBy==='poste')cp.sort((a,b)=>(a.poste&&a.poste[0]||'').localeCompare(b.poste&&b.poste[0]||''));
+  else if(sortBy==='maillot')cp.sort((a,b)=>(a.maillot||99)-(b.maillot||99));
   document.getElementById('cat-title').textContent=cat;
-  document.getElementById('cat-count').textContent=cp.length+' joueur'+(cp.length>1?'s':'')+' inscrit'+(cp.length>1?'s':'');
+  document.getElementById('cat-count').textContent=cp.length+' joueur'+(cp.length>1?'s':'')+' inscrit'+(cp.length>1?'s':'')+' · '+(players.filter(p=>p.cat===cat&&p.statut==='actif').length)+' actifs';
   list.innerHTML='';
   if(!cp.length){list.innerHTML='<div class="empty">Aucun joueur dans cette catégorie. Clique sur Ajouter un joueur.</div>';return;}
   cp.forEach(p=>{
     const ini=(p.prenom[0]||'')+(p.nom[0]||'');
     const photo=p.photo?`<img src="${p.photo}" alt="">`:'';
-    list.innerHTML+=`<div class="player" data-name="${p.prenom} ${p.nom}" onclick="location.href='joueur.html?id=${p.id}'"><div class="avatar">${photo||ini}</div><div class="info"><div class="name">${p.prenom} ${p.nom}</div><div class="meta">${(p.poste&&p.poste[0])||'—'}</div></div><div class="maillot">${p.maillot||'—'}</div><span class="tag ${p.statut}">${p.statut}</span></div>`;
+    let flags='';
+    if(licenceExpiree(p))flags+='<span class="flag lic">Licence expirée</span>';
+    if(certifManquant(p))flags+='<span class="flag cert">Certificat '+p.certificat+'</span>';
+    list.innerHTML+=`<div class="player" data-name="${p.prenom} ${p.nom}" onclick="location.href='joueur.html?id=${p.id}'"><div class="avatar">${photo||ini}</div><div class="info"><div class="name">${p.prenom} ${p.nom}</div><div class="meta">${(p.poste&&p.poste[0])||'—'}</div><div class="flags">${flags}</div></div><div class="maillot">${p.maillot||'—'}</div><span class="tag ${p.statut}">${p.statut}</span></div>`;
   });
 }
 render();
