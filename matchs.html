@@ -38,6 +38,15 @@
   .convoc-list li { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:14px; }
   .convoc-list li:last-child { border:none; }
   .convoc-list .poste { font-size:11px; color:#64748b; background:#f1f5f9; padding:2px 6px; border-radius:4px; }
+  .bar-cell { padding:10px 0 !important; }
+  .bar { display:flex; height:36px; border-radius:8px; overflow:hidden; cursor:pointer; border:1px solid #ddd; }
+  .bar div { flex:1; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.3); transition:flex .2s; }
+  .bar .c { background:#1d4ed8; }
+  .bar .j { background:#2e7d32; }
+  .bar .n { background:#94a3b8; }
+  .bar .c.sel { flex:2; box-shadow:inset 0 0 0 3px #fff; }
+  .bar .j.sel { flex:2; box-shadow:inset 0 0 0 3px #fff; }
+  .bar .n.sel { flex:2; box-shadow:inset 0 0 0 3px #fff; }
   .btn { border:none; border-radius:8px; padding:10px 16px; font-size:14px; font-weight:600; cursor:pointer; }
   .btn.primary { background:#1a1a2e; color:#fff; }
   .btn.primary:hover { background:#2d2d44; }
@@ -53,6 +62,10 @@
   .empty { text-align:center; color:#94a3b8; padding:40px 16px; font-size:14px; }
   .filter-bar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
   .filter-bar select { padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; }
+  .legend { display:flex; gap:16px; margin-bottom:12px; font-size:13px; }
+  .legend span { display:flex; align-items:center; gap:6px; }
+  .legend i { width:16px; height:16px; border-radius:3px; display:inline-block; }
+  @media (max-width:600px) { .bar { height:30px; } .convoc-list li { flex-wrap:wrap; } }
 </style>
 </head>
 <body>
@@ -99,6 +112,7 @@
         <option value="">Toutes catégories</option>
       </select>
     </div>
+    <div class="legend"><span><i style="background:#1d4ed8"></i>Convoqué</span><span><i style="background:#2e7d32"></i>A joué</span><span><i style="background:#94a3b8"></i>Pas convoqué</span></div>
     <div id="listeConvocations"></div>
   </div>
 
@@ -159,16 +173,17 @@
 
 <script>
 const CAT = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
-let db = JSON.parse(localStorage.getItem('footmanager') || '{"joueurs":[],"matchs":[],"convocations":{},"resultats":{}}');
+let db = JSON.parse(localStorage.getItem('footmanager') || '{"joueurs":[],"matchs":[],"convocations":{},"resultats":{},"tempsJeu":{}});
 if (!db.joueurs) db.joueurs = [];
 if (!db.matchs) db.matchs = [];
 if (!db.convocations) db.convocations = {};
 if (!db.resultats) db.resultats = {};
+if (!db.tempsJeu) db.tempsJeu = {};
 
 function save() { localStorage.setItem('footmanager', JSON.stringify(db)); }
 
 function toggleNav() {
-  document.getElementById('nav').classList.toggle('open');
+  document.getElementById('nav').classList.toggle('open);
   document.getElementById('overlay').classList.toggle('open);
 }
 
@@ -191,7 +206,7 @@ CAT.forEach(c => {
 
 function renderCalendrier() {
   const cat = document.getElementById('filtreCat').value;
-  const list = db.matchs.filter(m => !cat || m.cat === cat).sort((a,b) => new Date(a.date + 'T' + (a.heure||'00:00')) - new Date(b.date + 'T' + (b.heure||'00:00')));
+  const list = db.matchs.filter(m => !cat || m.cat === cat).sort((a,b) => new Date(a.date + 'T' + (a.heure||'00:00')) - new Date(b.date + 'T' + (b.heure||'00:00)));
   const el = document.getElementById('listeCalendrier);
   if (!list.length) { el.innerHTML = '<div class="empty">Aucun match programmé.</div>'; return; }
   el.innerHTML = list.map(m => {
@@ -220,10 +235,12 @@ function renderConvocations() {
   if (!list.length) { el.innerHTML = '<div class="empty">Aucun match.</div>'; return; }
   el.innerHTML = list.map(m => {
     const conv = db.convocations[m.id] || [];
+    const joues = (db.tempsJeu[m.id] || {}).played || [];
     const noms = conv.map(id => { const j = db.joueurs.find(x => x.id === id); return j ? j.prenom + ' ' + j.nom : '?'; }).join(', ');
     return `<div class="card" onclick="ouvrirConvocations('${m.id}')">
       <h3>${m.cat} — ${m.adversaire || 'Adversaire'} — ${m.date}</h3>
       <div class="meta">${conv.length} convoqué(s)${noms ? ' : ' + noms : ''}</div>
+      <div class="meta" style="margin-top:4px">${joues.length} a joué</div>
     </div>`;
   }).join('');
 }
@@ -280,14 +297,36 @@ function ouvrirConvocations(id) {
   document.getElementById('convocMatchInfo').textContent = m.cat + ' vs ' + (m.adversaire || '?') + ' — ' + m.date;
   const joueurs = db.joueurs.filter(j => j.cat === m.cat && j.statut !== 'parti' && j.statut !== 'suspendu' && j.statut !== 'blesse').sort((a,b) => (a.nom||'').localeCompare(b.nom||''));
   const conv = new Set(db.convocations[id] || []);
-  document.getElementById('convocJoueurs').innerHTML = '<ul class="convoc-list">' + joueurs.map(j => `<li><input type="checkbox" data-id="${j.id}" ${conv.has(j.id)?'checked':''}><span>${j.prenom} ${j.nom}</span><span class="poste">n°${j.maillot||'-'}</span></li>`).join('') + '</ul>';
+  const tj = db.tempsJeu[id] || { played: [], minutes: {} };
+  const played = new Set(tj.played || []);
+  document.getElementById('convocJoueurs').innerHTML = '<ul class="convoc-list">' + joueurs.map(j => {
+    const isConv = conv.has(j.id);
+    const isPlayed = played.has(j.id);
+    const mins = tj.minutes[j.id] || 0;
+    const bar = `<div class="bar" onclick="cycleConvoc('${j.id}')"><div class="c ${isConv?'sel':''}">Convoqué</div><div class="j ${isPlayed?'sel':''}">Joué</div><div class="n ${!isConv?'sel':''}">Non</div></div>`;
+    return `<li><div style="flex:1"><span>${j.prenom} ${j.nom}</span> <span class="poste">n°${j.maillot||'-'}</span></div><div class="bar-cell" style="width:180px">${bar}</div><div style="width:60px;text-align:center;font-size:13px">${isPlayed?mins+' min':''}</div></li>`;
+  }).join('') + '</ul>';
   document.getElementById('modalConvoc').style.display = 'flex';
 }
-function fermerModalConvoc() { document.getElementById('modalConvoc').style.display = 'none'; }
-function sauverConvocations() {
-  const ids = [...document.querySelectorAll('#convocJoueurs input:checked')].map(i => i.dataset.id);
-  db.convocations[currentMatchId] = ids; save(); fermerModalConvoc(); renderCalendrier(); renderConvocations();
+function cycleConvoc(pid) {
+  if (!db.convocations[currentMatchId]) db.convocations[currentMatchId] = [];
+  if (!db.tempsJeu[currentMatchId]) db.tempsJeu[currentMatchId] = { played: [], minutes: {} };
+  const conv = db.convocations[currentMatchId];
+  const tj = db.tempsJeu[currentMatchId];
+  const i = conv.indexOf(pid);
+  if (i >= 0) {
+    conv.splice(i, 1);
+    const pi = tj.played.indexOf(pid);
+    if (pi >= 0) tj.played.splice(pi, 1);
+    delete tj.minutes[pid];
+  } else {
+    conv.push(pid);
+  }
+  save();
+  ouvrirConvocations(currentMatchId);
 }
+function fermerModalConvoc() { document.getElementById('modalConvoc').style.display = 'none'; renderCalendrier(); renderConvocations(); }
+function sauverConvocations() { fermerModalConvoc(); }
 
 function ouvrirScore(id) {
   currentMatchId = id;
