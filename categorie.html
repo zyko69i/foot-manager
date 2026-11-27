@@ -3,132 +3,129 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Foot Manager — Catégorie</title>
+<title>MIMOUNI Soccer Stats — Catégorie</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
-  body { background:#f4f6f8; color:#1a2332; }
-  header { background:#0f2744; color:#fff; height:56px; display:flex; align-items:center; padding:0 16px; position:sticky; top:0; z-index:100; }
-  .burger { background:none; border:none; color:#fff; font-size:26px; cursor:pointer; padding:8px; margin-right:12px; }
-  .logo { font-weight:700; font-size:18px; letter-spacing:1px; }
-  #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; }
+  body { background:#fafafa; color:#222; }
+  header { background:#fff; color:#2FAEE0; height:72px; display:flex; align-items:center; padding:0 32px; border-bottom:1px solid #eee; }
+  .logo { font-weight:700; font-size:22px; }
+  .floating-burger { position:fixed; top:20px; left:20px; width:48px; height:48px; background:#fff; border:1px solid #e0e0e0; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,.06); display:none; align-items:center; justify-content:center; font-size:24px; color:#2FAEE0; cursor:pointer; z-index:100; }
+  .floating-burger.show { display:flex; }
+  #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.25); z-index:200; }
   #overlay.open { display:block; }
-  nav { position:fixed; top:0; left:-280px; width:280px; height:100%; background:#0f2744; z-index:300; transition:left .25s ease; overflow-y:auto; padding:16px 0; }
+  nav { position:fixed; top:0; left:-280px; width:270px; height:100%; background:#fff; z-index:300; transition:left .25s; overflow-y:auto; padding:32px 0; box-shadow:2px 0 16px rgba(0,0,0,.08); }
   nav.open { left:0; }
-  nav .close { color:#fff; background:none; border:none; font-size:22px; padding:8px 16px; cursor:pointer; display:block; width:100%; text-align:left; }
-  nav a { display:block; color:#c9d6e3; text-decoration:none; padding:12px 20px; font-size:15px; border-left:3px solid transparent; }
-  nav a:hover, nav a.active { background:#1a3a5c; color:#fff; border-left-color:#3d9cf0; }
-  nav .sub { padding-left:36px; font-size:13px; color:#8fa3b8; }
-  nav .sub:hover { color:#fff; }
-  main { max-width:1100px; margin:0 auto; padding:20px 16px 60px; }
-  .top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
-  h1 { font-size:22px; }
-  .count { font-size:13px; color:#6b7c93; }
-  .btn-add { background:#2e9e5b; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer; }
-  .btn-add:hover { background:#258f4f; }
-  .btn-plan { background:#3d9cf0; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer; }
-  .btn-plan:hover { background:#2b84d6; }
-  .tools { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
-  .search { flex:1; min-width:180px; padding:10px 14px; border:1px solid #d5dde8; border-radius:8px; font-size:14px; background:#fff; }
-  select { padding:10px 14px; border:1px solid #d5dde8; border-radius:8px; font-size:14px; background:#fff; }
-  .player { background:#fff; border-radius:10px; padding:12px 16px; box-shadow:0 1px 4px rgba(0,0,0,.08); display:flex; align-items:center; gap:12px; cursor:pointer; margin-bottom:10px; transition:box-shadow .15s; }
-  .player:hover { box-shadow:0 3px 10px rgba(0,0,0,.12); }
-  .avatar { width:44px; height:44px; border-radius:50%; background:#3d9cf0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; flex-shrink:0; overflow:hidden; }
-  .avatar img { width:100%; height:100%; object-fit:cover; }
-  .info { flex:1; min-width:0; }
-  .info .name { font-weight:600; font-size:15px; }
-  .info .meta { font-size:12px; color:#6b7c93; margin-top:2px; }
-  .flags { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
-  .flag { font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; }
-  .flag.lic { background:#fbd9d5; color:#c0392b; }
-  .flag.cert { background:#fde8d0; color:#e67e22; }
-  .maillot { font-size:13px; color:#0f2744; font-weight:600; min-width:28px; text-align:center; }
-  .tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
-  .tag.actif { background:#d9f2e6; color:#2e9e5b; }
-  .tag.blesse { background:#fde8d0; color:#e67e22; }
-  .tag.suspendu { background:#fbd9d5; color:#c0392b; }
-  .tag.parti { background:#e2e8f0; color:#6b7c93; }
-  .empty { text-align:center; color:#6b7c93; padding:40px 16px; font-size:14px; }
-  @media(max-width:600px){ .top{flex-direction:column; align-items:flex-start;} .tools{flex-direction:column;} }
+  nav a { display:block; color:#333; text-decoration:none; padding:16px 28px; font-size:16px; }
+  nav a:hover, nav a.active { background:#f7fbff; color:#2FAEE0; }
+  main { max-width:880px; margin:0 auto; padding:48px 28px 120px; }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:28px; }
+  h1 { font-size:28px; color:#2FAEE0; }
+  .count { font-size:15px; color:#777; margin-top:4px; }
+  .btn-add { background:#2e9e5b; color:#fff; border:none; border-radius:12px; padding:12px 20px; font-size:15px; font-weight:600; cursor:pointer; }
+  .tools { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
+  .search { flex:1; min-width:200px; padding:14px 18px; border:1px solid #ddd; border-radius:12px; font-size:15px; background:#fff; }
+  select { padding:14px 18px; border:1px solid #ddd; border-radius:12px; font-size:15px; background:#fff; }
+  .player { background:#fff; border-radius:16px; padding:16px 20px; box-shadow:0 2px 8px rgba(0,0,0,.04); display:flex; align-items:center; gap:16px; cursor:pointer; margin-bottom:14px; border:1px solid #f0f0f0; }
+  .player:hover { border-color:#2FAEE0; }
+  .avatar { width:48px; height:48px; border-radius:50%; background:#2FAEE0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; }
+  .info { flex:1; }
+  .info .name { font-weight:600; font-size:16px; }
+  .info .meta { font-size:13px; color:#888; margin-top:2px; }
+  .maillot { font-size:14px; color:#2FAEE0; font-weight:600; min-width:32px; text-align:center; }
+  .tag { display:inline-block; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600; }
+  .tag.actif { background:#e6f7ed; color:#2e9e5b; }
+  .tag.blesse { background:#fff3e0; color:#e67e22; }
+  .tag.suspendu { background:#fdecea; color:#c0392b; }
+  .empty { text-align:center; color:#aaa; padding:48px 16px; font-size:15px; }
+  .back-btn { position:fixed; bottom:24px; left:20px; width:44px; height:44px; background:#fff; border:1px solid #e0e0e0; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,.06); display:flex; align-items:center; justify-content:center; font-size:20px; color:#2FAEE0; cursor:pointer; z-index:100; }
 </style>
 </head>
 <body>
 <header>
-  <button class="burger" onclick="toggleMenu()">&#9776;</button>
-  <div class="logo">FOOT MANAGER</div>
+  <div class="logo" id="logo">Catégorie</div>
 </header>
+<button class="floating-burger" id="floatBurger" onclick="toggleMenu()">&#9776;</button>
 <div id="overlay" onclick="toggleMenu()"></div>
 <nav id="menu">
-  <button class="close" onclick="toggleMenu()">&#10005; Fermer</button>
   <a href="index.html">Tableau de bord</a>
   <a href="categories.html" class="active">Catégories</a>
-  <a href="#" class="sub" onclick="go('u6')">U6</a><a href="#" class="sub" onclick="go('u7')">U7</a><a href="#" class="sub" onclick="go('u8')">U8</a><a href="#" class="sub" onclick="go('u9')">U9</a><a href="#" class="sub" onclick="go('u10')">U10</a><a href="#" class="sub" onclick="go('u11')">U11</a><a href="#" class="sub" onclick="go('u12')">U12</a><a href="#" class="sub" onclick="go('u13')">U13</a><a href="#" class="sub" onclick="go('u14')">U14</a><a href="#" class="sub" onclick="go('u15')">U15</a><a href="#" class="sub" onclick="go('u16')">U16</a><a href="#" class="sub" onclick="go('u17')">U17</a><a href="#" class="sub" onclick="go('u18')">U18</a>
-  <a href="#" onclick="go('matchs')">Matchs</a>
-  <a href="#" onclick="go('presences')">Présences</a>
-  <a href="#" onclick="go('convocations')">Convocations</a>
-  <a href="#" onclick="go('documents')">Documents</a>
-  <a href="#" onclick="go('parametres')">Paramètres</a>
+  <a href="matchs.html">Matchs</a>
+  <a href="presences.html">Présences</a>
+  <a href="convocations.html">Convocations</a>
+  <a href="documents.html">Documents</a>
+  <a href="parametres.html">Paramètres</a>
   <a href="export.html">Export</a>
 </nav>
 <main>
   <div class="top">
     <div>
       <h1 id="cat-title">Catégorie</h1>
-      <div class="count" id="cat-count">0 joueurs inscrits</div>
+      <div class="count" id="cat-count">0 joueurs</div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-plan" onclick="location.href='planning.html?cat='+cat">Planning</button>
-      <button class="btn-add" onclick="ajouterJoueur()">+ Ajouter un joueur</button>
-    </div>
+    <button class="btn-add" onclick="ajouterJoueur()">+ Ajouter un joueur</button>
   </div>
   <div class="tools">
     <input class="search" type="text" placeholder="Rechercher un joueur..." oninput="filterPlayers(this.value)">
     <select onchange="sortPlayers(this.value)">
       <option value="nom">Trier par nom</option>
       <option value="statut">Trier par statut</option>
-      <option value="poste">Trier par poste</option>
       <option value="maillot">Trier par maillot</option>
     </select>
   </div>
   <div id="list"></div>
 </main>
+<button class="back-btn" onclick="history.back()">←</button>
 <script>
-const CATS=['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
-function load(k,fb){try{return JSON.parse(localStorage.getItem('fm.'+k))??fb;}catch(e){return fb;}}
-let players=load('players',[]);
-const params=new URLSearchParams(location.search);
-let cat=(params.get('cat')||'U11').toUpperCase();
-if(!CATS.includes(cat))cat='U11';
-let sortBy='nom';
-function toggleMenu(){document.getElementById('menu').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');}
-function go(page){toggleMenu();if(page.startsWith('u')){location.href='categorie.html?cat='+page.toUpperCase();}else{alert('Navigation vers : '+page+' (page à construire)');}}
-function ajouterJoueur(){location.href='joueur.html?cat='+cat+'&new=1';}
-function filterPlayers(q){
-  const rows=document.querySelectorAll('.player);
-  rows.forEach(r=>{r.style.display=r.dataset.name.toLowerCase().includes(q.toLowerCase())?'':'none';});
+const CATS = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
+function load(k,fb){ try{ return JSON.parse(localStorage.getItem(k)) ?? fb; }catch(e){ return fb; } }
+let players = load('fm.players', []);
+const params = new URLSearchParams(location.search);
+let cat = (params.get('cat') || 'U11').toUpperCase();
+if (!CATS.includes(cat)) cat = 'U11';
+let sortBy = 'nom';
+function toggleMenu(){
+  document.getElementById('menu').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
 }
-function sortPlayers(v){sortBy=v;render();}
-function licenceExpiree(p){return p.licence&&p.licence<'2026-06-01';}
-function certifManquant(p){return p.certificat!=='ok';}
-function render(){
-  const list=document.getElementById('list);
-  let cp=players.filter(p=>p.cat===cat);
-  if(sortBy==='nom')cp.sort((a,b)=>(a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom));
-  else if(sortBy==='statut')cp.sort((a,b)=>a.statut.localeCompare(b.statut));
-  else if(sortBy==='poste')cp.sort((a,b)=>(a.poste&&a.poste[0]||'').localeCompare(b.poste&&b.poste[0]||''));
-  else if(sortBy==='maillot')cp.sort((a,b)=>(a.maillot||99)-(b.maillot||99));
-  document.getElementById('cat-title').textContent=cat;
-  document.getElementById('cat-count').textContent=cp.length+' joueur'+(cp.length>1?'s':'')+' inscrit'+(cp.length>1?'s':'')+' · '+(players.filter(p=>p.cat===cat&&p.statut==='actif').length)+' actifs';
-  list.innerHTML='';
-  if(!cp.length){list.innerHTML='<div class="empty">Aucun joueur dans cette catégorie. Clique sur Ajouter un joueur.</div>';return;}
-  cp.forEach(p=>{
-    const ini=(p.prenom[0]||'')+(p.nom[0]||'');
-    const photo=p.photo?`<img src="${p.photo}" alt="">`:'';
-    let flags='';
-    if(licenceExpiree(p))flags+='<span class="flag lic">Licence expirée</span>';
-    if(certifManquant(p))flags+='<span class="flag cert">Certificat '+p.certificat+'</span>';
-    list.innerHTML+=`<div class="player" data-name="${p.prenom} ${p.nom}" onclick="location.href='joueur.html?id=${p.id}'"><div class="avatar">${photo||ini}</div><div class="info"><div class="name">${p.prenom} ${p.nom}</div><div class="meta">${(p.poste&&p.poste[0])||'—'}</div><div class="flags">${flags}</div></div><div class="maillot">${p.maillot||'—'}</div><span class="tag ${p.statut}">${p.statut}</span></div>`;
+function ajouterJoueur(){
+  location.href = 'joueur.html?cat=' + cat + '&new=1';
+}
+function filterPlayers(q){
+  document.querySelectorAll('.player').forEach(r => {
+    r.style.display = r.dataset.name.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
   });
 }
+function sortPlayers(v){ sortBy = v; render(); }
+function render(){
+  const list = document.getElementById('list');
+  let cp = players.filter(p => p.cat === cat);
+  if (sortBy === 'nom') cp.sort((a,b) => (a.nom + ' ' + a.prenom).localeCompare(b.nom + ' ' + b.prenom));
+  else if (sortBy === 'statut') cp.sort((a,b) => (a.statut || '').localeCompare(b.statut || ''));
+  else if (sortBy === 'maillot') cp.sort((a,b) => (a.maillot || 99) - (b.maillot || 99));
+  document.getElementById('cat-title').textContent = cat;
+  document.getElementById('logo').textContent = cat;
+  document.getElementById('cat-count').textContent = cp.length + ' joueur' + (cp.length > 1 ? 's' : '');
+  list.innerHTML = '';
+  if (!cp.length) {
+    list.innerHTML = '<div class="empty">Aucun joueur dans cette catégorie.</div>';
+    return;
+  }
+  cp.forEach(p => {
+    const ini = (p.prenom || '?')[0] + (p.nom || '?')[0];
+    list.innerHTML += `<div class="player" data-name="${p.prenom} ${p.nom}" onclick="location.href='joueur.html?id=${p.id}'">
+      <div class="avatar">${ini}</div>
+      <div class="info"><div class="name">${p.prenom} ${p.nom}</div><div class="meta">${p.poste || '—'}</div></div>
+      <div class="maillot">${p.maillot || '—'}</div>
+      <span class="tag ${p.statut || 'actif'}">${p.statut || 'actif'}</span>
+    </div>`;
+  });
+}
+window.addEventListener('scroll',()=>{
+  const burger = document.getElementById('floatBurger');
+  if (window.scrollY > 100) burger.classList.add('show');
+  else burger.classList.remove('show');
+});
 render();
 </script>
 </body>
