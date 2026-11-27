@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foot Manager</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
+  body { background:#f4f6f8; color:#1a2332; }
+  header { background:#0f2744; color:#fff; height:56px; display:flex; align-items:center; padding:0 16px; position:sticky; top:0; z-index:100; }
+  .burger { background:none; border:none; color:#fff; font-size:26px; cursor:pointer; padding:8px; margin-right:12px; }
+  .logo { font-weight:700; font-size:18px; letter-spacing:1px; }
+  #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; }
+  #overlay.open { display:block; }
+  nav { position:fixed; top:0; left:-280px; width:280px; height:100%; background:#0f2744; z-index:300; transition:left .25s ease; overflow-y:auto; padding:16px 0; }
+  nav.open { left:0; }
+  nav .close { color:#fff; background:none; border:none; font-size:22px; padding:8px 16px; cursor:pointer; display:block; width:100%; text-align:left; }
+  nav a { display:block; color:#c9d6e3; text-decoration:none; padding:12px 20px; font-size:15px; border-left:3px solid transparent; }
+  nav a:hover, nav a.active { background:#1a3a5c; color:#fff; border-left-color:#3d9cf0; }
+  nav .sub { padding-left:36px; font-size:13px; color:#8fa3b8; }
+  nav .sub:hover { color:#fff; }
+  main { max-width:1100px; margin:0 auto; padding:20px 16px 60px; }
+  h1 { font-size:22px; margin-bottom:16px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:20px; }
+  .stat { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); cursor:pointer; transition:transform .15s; }
+  .stat:hover { transform:translateY(-2px); }
+  .stat .num { font-size:28px; font-weight:700; }
+  .stat .label { font-size:12px; color:#6b7c93; text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+  .stat.actifs .num { color:#2e9e5b; }
+  .stat.blesses .num { color:#e67e22; }
+  .stat.suspendus .num { color:#c0392b; }
+  .section { margin-bottom:24px; }
+  .section h2 { font-size:15px; text-transform:uppercase; letter-spacing:1px; color:#6b7c93; margin-bottom:10px; }
+  .alerts { display:flex; flex-direction:column; gap:8px; }
+  .alert { background:#fff; border-radius:8px; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.07); border-left:4px solid #c0392b; }
+  .alert.orange { border-left-color:#e67e22; }
+  .alert.blue { border-left-color:#3d9cf0; }
+  .alert .count { font-weight:700; font-size:20px; min-width:32px; }
+  .alert .txt { font-size:14px; flex:1; }
+  .alert .go { color:#3d9cf0; font-size:13px; }
+  .bars { display:flex; flex-direction:column; gap:6px; }
+  .bar-row { display:flex; align-items:center; gap:10px; cursor:pointer; padding:4px 0; }
+  .bar-row .cat { width:40px; font-weight:600; font-size:13px; }
+  .bar-bg { flex:1; height:18px; background:#e2e8f0; border-radius:9px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:9px; transition:width .4s; }
+  .bar-fill.green { background:#2e9e5b; }
+  .bar-fill.orange { background:#e67e22; }
+  .bar-fill.red { background:#c0392b; }
+  .bar-row .pct { width:36px; font-size:12px; color:#6b7c93; text-align:right; }
+  .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+  .card { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .card h3 { font-size:14px; margin-bottom:10px; color:#0f2744; }
+  .feed { list-style:none; }
+  .feed li { padding:8px 0; border-bottom:1px solid #eef1f5; font-size:13px; color:#445; }
+  .feed li span { color:#6b7c93; font-size:11px; margin-right:8px; }
+  .coach-list { list-style:none; }
+  .coach-list li { padding:6px 0; font-size:13px; display:flex; justify-content:space-between; cursor:pointer; }
+  .coach-list li:hover { color:#3d9cf0; }
+  .training { width:100%; border-collapse:collapse; font-size:13px; }
+  .training th { text-align:left; padding:8px; background:#eef2f7; color:#6b7c93; font-weight:600; }
+  .training td { padding:8px; border-bottom:1px solid #eef1f5; cursor:pointer; }
+  .training tr:hover td { background:#f7fafc; }
+  .tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+  .tag.green { background:#d9f2e6; color:#2e9e5b; }
+  .tag.orange { background:#fde8d0; color:#e67e22; }
+  .tag.red { background:#fbd9d5; color:#c0392b; }
+  .last-player { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); cursor:pointer; display:flex; align-items:center; gap:12px; }
+  .last-player:hover { box-shadow:0 3px 10px rgba(0,0,0,.12); }
+  .avatar { width:44px; height:44px; border-radius:50%; background:#3d9cf0; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; }
+  @media(max-width:600px){ .stats{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+<header>
+  <button class="burger" onclick="toggleMenu()">&#9776;</button>
+  <div class="logo">FOOT MANAGER</div>
+</header>
+<div id="overlay" onclick="toggleMenu()"></div>
+<nav id="menu">
+  <button class="close" onclick="toggleMenu()">&#10005; Fermer</button>
+  <a href="#" class="active" onclick="go('accueil')">Accueil</a>
+  <a href="#" onclick="go('categories')">Catégories</a>
+  <a href="#" class="sub" onclick="go('u6')">U6</a><a href="#" class="sub" onclick="go('u7')">U7</a><a href="#" class="sub" onclick="go('u8')">U8</a><a href="#" class="sub" onclick="go('u9')">U9</a><a href="#" class="sub" onclick="go('u10')">U10</a><a href="#" class="sub" onclick="go('u11')">U11</a><a href="#" class="sub" onclick="go('u12')">U12</a><a href="#" class="sub" onclick="go('u13')">U13</a><a href="#" class="sub" onclick="go('u14')">U14</a><a href="#" class="sub" onclick="go('u15')">U15</a><a href="#" class="sub" onclick="go('u16')">U16</a><a href="#" class="sub" onclick="go('u17')">U17</a><a href="#" class="sub" onclick="go('u18')">U18</a>
+  <a href="#" onclick="go('matchs')">Matchs</a>
+  <a href="#" onclick="go('presences')">Présences</a>
+  <a href="#" onclick="go('convocations')">Convocations</a>
+  <a href="#" onclick="go('documents')">Documents</a>
+  <a href="#" onclick="go('parametres')">Paramètres</a>
+  <a href="#" onclick="go('export')">Export</a>
+</nav>
+<main>
+  <h1>Tableau de bord</h1>
+  <div class="stats">
+    <div class="stat" onclick="go('joueurs')"><div class="num" id="s-total">0</div><div class="label">Joueurs totaux</div></div>
+    <div class="stat actifs" onclick="go('joueurs?statut=actif')"><div class="num" id="s-actifs">0</div><div class="label">Actifs</div></div>
+    <div class="stat blesses" onclick="go('joueurs?statut=blesse')"><div class="num" id="s-blesses">0</div><div class="label">Blessés</div></div>
+    <div class="stat suspendus" onclick="go('joueurs?statut=suspendu')"><div class="num" id="s-suspendus">0</div><div class="label">Suspendus</div></div>
+  </div>
+  <div class="section">
+    <h2>Alertes</h2>
+    <div class="alerts">
+      <div class="alert blue" onclick="go('matchs')"><div class="count" id="a-matchs">0</div><div class="txt">Matchs à venir cette semaine</div><div class="go">Ouvrir →</div></div>
+      <div class="alert orange" onclick="go('presences')"><div class="count" id="a-presences">0</div><div class="txt">Présences non pointées</div><div class="go">Ouvrir →</div></div>
+      <div class="alert" onclick="go('joueurs?alerte=licence')"><div class="count" id="a-licences">0</div><div class="txt">Licences proches de l'expiration</div><div class="go">Ouvrir →</div></div>
+      <div class="alert orange" onclick="go('joueurs?alerte=certificat')"><div class="count" id="a-certifs">0</div><div class="txt">Certificats médicaux manquants</div><div class="go">Ouvrir →</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Avancement par catégorie</h2>
+    <div class="bars" id="bars"></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Répartition par âge</h3>
+      <canvas id="chart" width="400" height="180"></canvas>
+    </div>
+    <div class="card">
+      <h3>Éducateurs assignés</h3>
+      <ul class="coach-list" id="coaches"></ul>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Planning entraînements</h2>
+    <div class="card" style="padding:0;overflow-x:auto">
+      <table class="training">
+        <thead><tr><th>Jour</th><th>Catégorie</th><th>Terrain</th><th>Heure</th><th>Éducateur</th><th>Statut</th></tr></thead>
+        <tbody id="training"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Dernier joueur modifié</h2>
+    <div class="last-player" id="last-player" onclick="go('joueur')">
+      <div class="avatar" id="lp-avatar">?</div>
+      <div><div id="lp-name">Aucun joueur</div><div id="lp-cat" style="font-size:12px;color:#6b7c93"></div></div>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Activité récente</h2>
+    <div class="card"><ul class="feed" id="feed"></ul></div>
+  </div>
+</main>
+<script>
+const CATS=['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
+function load(k,fb){try{return JSON.parse(localStorage.getItem('fm.'+k))??fb;}catch(e){return fb;}}
+function save(k,v){localStorage.setItem('fm.'+k,JSON.stringify(v));}
+let players=load('players',[]);
+if(!players.length){
+  players=[
+    {id:1,nom:'Martin',prenom:'Léo',cat:'U11',statut:'actif',maillot:7,poste:['Milieu central'],licence:'2026-09-15',certificat:'ok',modifie:'2026-11-26'},
+    {id:2,nom:'Bernard',prenom:'Emma',cat:'U9',statut:'blesse',maillot:3,poste:['Gardien'],licence:'2026-06-01',certificat:'manquant',modifie:'2026-11-25'},
+    {id:3,nom:'Durand',prenom:'Noah',cat:'U13',statut:'actif',maillot:10,poste:['Attaquant'],licence:'2025-12-20',certificat:'ok',modifie:'2026-11-24'},
+    {id:4,nom:'Petit',prenom:'Chloé',cat:'U7',statut:'suspendu',maillot:5,poste:['Défenseur latéral droit'],licence:'2026-10-01',certificat:'ok',modifie:'2026-11-23'},
+    {id:5,nom:'Moreau',prenom:'Adam',cat:'U15',statut:'actif',maillot:9,poste:['Ailier gauche'],licence:'2026-08-30',certificat:'attente',modifie:'2026-11-22'}
+  ];
+  save('players',players);
+}
+function toggleMenu(){document.getElementById('menu').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');}
+function go(page){toggleMenu();alert('Navigation vers : '+page+' (page à construire)');}
+function render(){
+  const total=players.length;
+  const actifs=players.filter(p=>p.statut==='actif').length;
+  const blesses=players.filter(p=>p.statut==='blesse').length;
+  const suspendus=players.filter(p=>p.statut==='suspendu').length;
+  document.getElementById('s-total').textContent=total;
+  document.getElementById('s-actifs').textContent=actifs;
+  document.getElementById('s-blesses').textContent=blesses;
+  document.getElementById('s-suspendus').textContent=suspendus;
+  document.getElementById('a-matchs').textContent='3';
+  document.getElementById('a-presences').textContent='2';
+  document.getElementById('a-licences').textContent=players.filter(p=>p.licence<'2026-06-01').length||'1';
+  document.getElementById('a-certifs').textContent=players.filter(p=>p.certificat!=='ok').length;
+  const bars=document.getElementById('bars');
+  bars.innerHTML='';
+  CATS.forEach(c=>{
+    const n=players.filter(p=>p.cat===c).length;
+    const max=12; const pct=Math.min(100,Math.round(n/max*100));
+    let cls='red'; if(n>=max)cls='green'; else if(n>=6)cls='orange';
+    bars.innerHTML+=`<div class="bar-row" onclick="go('cat-'+'${c.toLowerCase()}')"><div class="cat">${c}</div><div class="bar-bg"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div><div class="pct">${n}</div></div>`;
+  });
+  const ctx=document.getElementById('chart').getContext('2d');
+  const counts=CATS.map(c=>players.filter(p=>p.cat===c).length);
+  const maxC=Math.max(...counts,1); const w=400,h=180,pad=30;
+  ctx.clearRect(0,0,w,h);
+  counts.forEach((v,i)=>{
+    const x=pad+i*(w-2*pad)/CATS.length; const bh=(h-2*pad)*v/maxC;
+    ctx.fillStyle=v===0?'#c0392b':v<6?'#e67e22':'#2e9e5b';
+    ctx.fillRect(x,h-pad-bh,(w-2*pad)/CATS.length-4,bh);
+    ctx.fillStyle='#6b7c93'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(CATS[i],x+(w-2*pad)/CATS.length/2-2,h-pad+12);
+  });
+  const coaches=load('coaches',[
+    {cat:'U6',nom:'M. Roux'},{cat:'U7',nom:'Mme Lefèvre'},{cat:'U8',nom:'M. Petit'},{cat:'U9',nom:'M. Roux'},{cat:'U10',nom:'Mme Bernard'},{cat:'U11',nom:'M. Durand'},{cat:'U12',nom:'M. Moreau'},{cat:'U13',nom:'Mme Simon'},{cat:'U14',nom:'M. Petit'},{cat:'U15',nom:'M. Roux'},{cat:'U16',nom:'—'},{cat:'U17',nom:'—'},{cat:'U18',nom:'—'}
+  ]);
+  document.getElementById('coaches').innerHTML=coaches.map(c=>`<li onclick="go('coach-'+c.cat.toLowerCase())"><span>${c.cat}</span><span>${c.nom}</span></li>`).join('');
+  const train=load('training',[
+    {jour:'Lundi',cat:'U11',terrain:'Complexe Nord',heure:'18h30',educ:'M. Durand',statut:'confirmé'},
+    {jour:'Mardi',cat:'U9',terrain:'Complexe Sud',heure:'17h00',educ:'M. Roux',statut:'confirmé'},
+    {jour:'Mercredi',cat:'U13',terrain:'Complexe Nord',heure:'19h00',educ:'Mme Simon',statut:'à confirmer'},
+    {jour:'Jeudi',cat:'U7',terrain:'Complexe Sud',heure:'16h30',educ:'Mme Lefèvre',statut:'confirmé'},
+    {jour:'Vendredi',cat:'U15',terrain:'Complexe Nord',heure:'20h00',educ:'M. Roux',statut:'confirmé'}
+  ]);
+  document.getElementById('training').innerHTML=train.map(t=>`<tr onclick="go('planning')"><td>${t.jour}</td><td>${t.cat}</td><td>${t.terrain}</td><td>${t.heure}</td><td>${t.educ}</td><td><span class="tag ${t.statut==='confirmé'?'green':'orange'}">${t.statut}</span></td></tr>`).join('');
+  const last=[...players].sort((a,b)=>b.modifie.localeCompare(a.modifie))[0];
+  if(last){
+    document.getElementById('lp-avatar').textContent=last.prenom[0];
+    document.getElementById('lp-name').textContent=last.prenom+' '+last.nom;
+    document.getElementById('lp-cat').textContent=last.cat+' · modifié le '+last.modifie;
+  }
+  document.getElementById('feed').innerHTML=[
+    '<li><span>26/11</span>Léo Martin ajouté en U11</li>',
+    '<li><span>25/11</span>Emma Bernard marquée blessée</li>',
+    '<li><span>24/11</span>Planning U13 mis à jour</li>',
+    '<li><span>23/11</span>Chloé Petit suspendue 1 match</li>'
+  ].join('');
+}
+render();
+</script>
+</body>
+</html>
