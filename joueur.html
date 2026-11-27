@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foot Manager — Fiche joueur</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
+  body { background:#f4f6f8; color:#1a2332; }
+  header { background:#0f2744; color:#fff; height:56px; display:flex; align-items:center; padding:0 16px; position:sticky; top:0; z-index:100; }
+  .burger { background:none; border:none; color:#fff; font-size:26px; cursor:pointer; padding:8px; margin-right:12px; }
+  .logo { font-weight:700; font-size:18px; letter-spacing:1px; }
+  #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; }
+  #overlay.open { display:block; }
+  nav { position:fixed; top:0; left:-280px; width:280px; height:100%; background:#0f2744; z-index:300; transition:left .25s ease; overflow-y:auto; padding:16px 0; }
+  nav.open { left:0; }
+  nav .close { color:#fff; background:none; border:none; font-size:22px; padding:8px 16px; cursor:pointer; display:block; width:100%; text-align:left; }
+  nav a { display:block; color:#c9d6e3; text-decoration:none; padding:12px 20px; font-size:15px; border-left:3px solid transparent; }
+  nav a:hover, nav a.active { background:#1a3a5c; color:#fff; border-left-color:#3d9cf0; }
+  nav .sub { padding-left:36px; font-size:13px; color:#8fa3b8; }
+  nav .sub:hover { color:#fff; }
+  main { max-width:900px; margin:0 auto; padding:20px 16px 80px; }
+  .page-title { font-size:22px; margin-bottom:4px; }
+  .page-sub { font-size:13px; color:#6b7c93; margin-bottom:20px; }
+  .bloc { background:#fff; border-radius:10px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); margin-bottom:16px; }
+  .bloc h2 { font-size:13px; text-transform:uppercase; letter-spacing:1px; color:#0f2744; margin-bottom:12px; border-bottom:2px solid #3d9cf0; padding-bottom:6px; }
+  label { display:block; font-size:12px; color:#6b7c93; margin:10px 0 4px; font-weight:600; }
+  input, select, textarea { width:100%; padding:10px 12px; border:1px solid #d5dde8; border-radius:8px; font-size:14px; background:#fafbfc; }
+  textarea { min-height:60px; resize:vertical; }
+  .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+  .check { display:flex; align-items:center; gap:8px; font-size:13px; margin:6px 0; }
+  .check input { width:auto; }
+  .photo-box { width:110px; height:110px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; color:#6b7c93; font-size:13px; overflow:hidden; flex-shrink:0; }
+  .photo-box img { width:100%; height:100%; object-fit:cover; }
+  .photo-wrap { display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  .photo-btns { display:flex; gap:6px; flex-wrap:wrap; }
+  .photo-btns button { padding:6px 12px; border:1px solid #d5dde8; border-radius:6px; background:#fff; font-size:12px; cursor:pointer; }
+  .btns { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; position:sticky; bottom:0; background:#f4f6f8; padding:12px 0; }
+  button.primary { background:#2e9e5b; color:#fff; border:none; border-radius:8px; padding:12px 22px; font-size:14px; font-weight:600; cursor:pointer; }
+  button.secondary { background:#e2e8f0; color:#1a2332; border:none; border-radius:8px; padding:12px 22px; font-size:14px; font-weight:600; cursor:pointer; }
+  .auto { color:#6b7c93; font-size:12px; font-style:italic; }
+  .doc-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eef1f5; font-size:13px; flex-wrap:wrap; }
+  .doc-item .type { font-weight:600; color:#0f2744; }
+  .doc-item button { padding:4px 8px; border:1px solid #d5dde8; border-radius:6px; background:#fff; font-size:11px; cursor:pointer; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+  .badge.ok { background:#d9f2e6; color:#2e9e5b; }
+  .badge.att { background:#fde8d0; color:#e67e22; }
+  .badge.manq { background:#fbd9d5; color:#c0392b; }
+  .hist { font-size:12px; color:#6b7c93; padding:4px 0; border-bottom:1px solid #eef1f5; }
+  @media(max-width:600px){ .row{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<header>
+  <button class="burger" onclick="toggleMenu()">&#9776;</button>
+  <div class="logo">FOOT MANAGER</div>
+</header>
+<div id="overlay" onclick="toggleMenu()"></div>
+<nav id="menu">
+  <button class="close" onclick="toggleMenu()">&#10005; Fermer</button>
+  <a href="index.html">Tableau de bord</a>
+  <a href="categories.html">Catégories</a>
+  <a href="export.html">Export</a>
+</nav>
+<main>
+  <div class="page-title" id="page-title">Nouvelle fiche joueur</div>
+  <div class="page-sub" id="page-sub"></div>
+
+  <div class="bloc">
+    <h2>Bloc 1 — Identité et profil</h2>
+    <div class="photo-wrap">
+      <div class="photo-box" id="photo-box">Photo</div>
+      <div class="photo-btns">
+        <button onclick="document.getElementById('photo-input').click()">Ajouter</button>
+        <button onclick="prendrePhoto()">Prendre</button>
+        <button onclick="document.getElementById('photo-input').click()">Modifier</button>
+        <button onclick="supprimerPhoto()">Supprimer</button>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="setPhoto(this)">
+    </div>
+    <div class="row">
+      <div><label>Nom</label><input id="f-nom"></div>
+      <div><label>Prénom</label><input id="f-prenom"></div>
+      <div><label>Date de naissance</label><input type="date" id="f-dnaiss"></div>
+      <div><label>Lieu de naissance</label><input id="f-lnaiss"></div>
+      <div><label>Catégorie</label><select id="f-cat"></select></div>
+      <div><label>Sexe</label><div style="display:flex;gap:16px;margin-top:8px"><label class="check"><input type="radio" name="sexe" value="masculin"> Masculin</label><label class="check"><input type="radio" name="sexe" value="feminin"> Féminin</label></div></div>
+    </div>
+    <label>Adresse — rue</label><input id="f-rue">
+    <div class="row">
+      <div><label>Code postal</label><input id="f-cp"></div>
+      <div><label>Ville</label><input id="f-ville"></div>
+    </div>
+  </div>
+
+  <div class="bloc">
+    <h2>Bloc 2 — Parents et responsables</h2>
+    <div id="parents-list"></div>
+    <button class="secondary" style="margin-top:10px" onclick="ajouterResponsable()">+ Ajouter un responsable</button>
+  </div>
+
+  <div class="bloc">
+    <h2>Bloc 3 — Licence et administratif</h2>
+    <div class="row">
+      <div><label>Numéro de licence</label><input id="f-licence"></div>
+      <div><label>Date de validité</label><input type="date" id="f-validite"></div>
+      <div><label>Statut</label><select id="f-statut-lic"><option value="valide">Validée</option><option value="en-attente">En attente</option><option value="expiree">Expirée</option><option value="non-renseignee">Non renseignée</option></select></div>
+    </div>
+  </div>
+
+  <div class="bloc">
+    <h2>Bloc 4 — Informations sportives</h2>
+    <label>Numéro de maillot (facultatif)</label><input type="number" id="f-maillot">
+    <label>Postes occupés</label>
+    <div id="postes-list"></div>
+    <label>Poste préféré</label><select id="f-pref"><option value="">—</option></select>
+  </div>
+
+  <div class="bloc">
+    <h2>Bloc 5 — Santé et sécurité</h2>
+    <label>Allergies signalées</label><textarea id="f-allergies"></textarea>
+    <label>Consignes en cas d'urgence</label><textarea id="f-consignes"></textarea>
+    <label>Contact d'urgence</label><select id="f-contact"><option value="">— Sélectionner un responsable —</option></select>
+    <div class="auto" id="contact-tel"></div>
+    <label>Deuxième téléphone (facultatif)</label><input id="f-tel2">
+  </div>
+
+  <div class="bloc">
+    <h2>Bloc 6 — Présences et absences</h2>
+    <div class="auto">Alimenté automatiquement par les feuilles de présence. Aucune ressaisie.</div>
+    <div id="presences-recap" style="margin-top:8px;font-size:13px"></div>
+  </div>
+
+  <div class="bloc">
+    <h2>Bloc 7 — Matchs et convocations</h2>
+    <div class="auto">Alimenté automatiquement par les convocations. Aucune ressaisie.</div>
+    <div id="matchs-recap" style="margin-top:8px;font-size:13px"></div>
+  </div>
+
+  <div class="bloc">
+    <h2>Bloc 8 — Documents et autorisations</h2>
+    <button class="secondary" onclick="document.getElementById('doc-input').click()">+ Ajouter un document</button>
+    <input type="file" id="doc-input" style="display:none" onchange="ajouterDoc(this)">
+    <div id="docs-list" style="margin-top:10px"></div>
+    <div class="row" style="margin-top:12px">
+      <div><label>Rendez-vous médical</label><select id="f-rdv"><option value="à prévoir">À prévoir</option><option value="en attente">En attente</option><option value="effectué">Effectué</option></select></div>
+    </div>
+  </div>
+
+  <div class="bloc">
+    <h2>Bloc 9 — Historique et observations</h2>
+    <label>Notes libres pour l'éducateur</label><textarea id="f-notes"></textarea>
+    <label>Historique automatique</label>
+    <div id="historique"></div>
+  </div>
+
+  <div class="btns">
+    <button class="primary" onclick="sauvegarder()">Enregistrer</button>
+    <button class="secondary" onclick="location.href='categories.html'">Annuler</button>
+  </div>
+</main>
+<script>
+const CATS=['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18'];
+const POSTES=['Gardien','Défenseur central','Défenseur latéral droit','Défenseur latéral gauche','Milieu défensif','Milieu central','Milieu offensif','Ailier droit','Ailier gauche','Attaquant'];
+function load(k,fb){try{return JSON.parse(localStorage.getItem('fm.'+k))??fb;}catch(e){return fb;}}
+function save(k,v){localStorage.setItem('fm.'+k,JSON.stringify(v));}
+let players=load('players',[]);
+let parents=load('parents',{});
+let docs=load('docs',{});
+let presences=load('presences',{});
+let matchs=load('matchs',{});
+let hist=load('hist',{});
+const params=new URLSearchParams(location.search);
+const pid=params.get('id'); const isNew=params.get('new')==='1';
+let player=pid?players.find(p=>p.id===pid):null;
+if(!player&&isNew){player={id:'p'+Date.now(),cat:params.get('cat')||'U11',statut:'actif',poste:[],created:new Date().toISOString()};}
+
+const selCat=document.getElementById('f-cat'); CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCat.appendChild(o);});
+const pl=document.getElementById('postes-list'); POSTES.forEach(po=>{pl.innerHTML+=`<label class="check"><input type="checkbox" value="${po}" onchange="majPref()"> ${po}</label>`;});
+
+function majPref(){
+  const prefs=document.getElementById('f-pref'); const checked=[...document.querySelectorAll('#postes-list input:checked')].map(i=>i.value);
+  prefs.innerHTML='<option value="">—</option>'; checked.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;prefs.appendChild(o);});
+}
+function toggleMenu(){document.getElementById('menu').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');}
+
+function renderParents(){
+  const list=document.getElementById('parents-list'); const pr=parents[player.id]||[];
+  list.innerHTML=pr.map((r,i)=>`<div class="row" style="margin-bottom:8px;align-items:end"><div><label>Nom</label><input value="${r.nom||''}" onchange="parents[player.id][${i}].nom=this.value"></div><div><label>Lien</label><input value="${r.lien||''}" onchange="parents[player.id][${i}].lien=this.value"></div><div><label>Téléphone</label><input value="${r.tel||''}" onchange="parents[player.id][${i}].tel=this.value"></div><div><label>E-mail</label><input value="${r.email||''}" onchange="parents[player.id][${i}].email=this.value"></div><div><button class="secondary" onclick="parents[player.id].splice(${i},1);renderParents();majContact()">Suppr.</button></div></div>`).join('');
+  majContact();
+}
+function ajouterResponsable(){if(!parents[player.id])parents[player.id]=[];parents[player.id].push({nom:'',lien:'',tel:'',email:''});renderParents();}
+function majContact(){
+  const sel=document.getElementById('f-contact'); const cur=sel.value; sel.innerHTML='<option value="">— Sélectionner un responsable —</option>';
+  (parents[player.id]||[]).forEach(r=>{if(r.nom){const o=document.createElement('option');o.value=r.nom;o.textContent=r.nom+' ('+r.tel+')';sel.appendChild(o);}});
+  sel.value=cur; document.getElementById('contact-tel').textContent=sel.value?('Numéro : '+(parents[player.id]||[]).find(r=>r.nom===sel.value).tel):'';
+}
+document.getElementById('f-contact').addEventListener('change',majContact);
+
+function renderDocs(){
+  const list=document.getElementById('docs-list'); const dj=docs[player.id]||[];
+  list.innerHTML=dj.length?dj.map((d,i)=>`<div class="doc-item"><span class="type">${d.type}</span><span>${d.nom}</span><button onclick="docs[player.id].splice(${i},1);renderDocs()">Suppr.</button></div>`).join(''):'<div class="auto">Aucun document.</div>';
+}
+function ajouterDoc(inp){if(!inp.files[0])return;if(!docs[player.id])docs[player.id]=[];docs[player.id].push({type:'justificatif',nom:inp.files[0].name});renderDocs();inp.value='';}
+
+function setPhoto(inp){if(!inp.files[0])return;const r=new FileReader();r.onload=e=>{player.photo=e.target.result;document.getElementById('photo-box').innerHTML=`<img src="${e.target.result}">`;};r.readAsDataURL(inp.files[0]);}
+function prendrePhoto(){document.getElementById('photo-input').setAttribute('capture','environment');document.getElementById('photo-input').click();}
+function supprimerPhoto(){player.photo=null;document.getElementById('photo-box').textContent='Photo';}
+
+function remplir(){
+  if(!player)return;
+  document.getElementById('page-title').textContent=player.prenom+' '+player.nom;
+  document.getElementById('page-sub').textContent='Catégorie '+player.cat+' · Créé le '+new Date(player.created).toLocaleDateString('fr-FR');}
+  document.getElementById('f-nom').value=player.nom||'';
+  document.getElementById('f-prenom').value=player.prenom||'';
+  document.getElementById('f-dnaiss').value=player.dnaiss||'';
+  document.getElementById('f-lnaiss').value=player.lnaiss||'';
+  document.getElementById('f-cat').value=player.cat||'U11';
+  if(player.sexe)document.querySelector('input[name=sexe][value="'+player.sexe+'"]').checked=true;
+  document.getElementById('f-rue').value=player.rue||'';
+  document.getElementById('f-cp').value=player.cp||'';
+  document.getElementById('f-ville').value=player.ville||'';
+  document.getElementById('f-licence').value=player.licence||'';
+  document.getElementById('f-validite').value=player.licenceValidite||'';
+  document.getElementById('f-statut-lic').value=player.licenceStatut||'non-renseignee';
+  document.getElementById('f-maillot').value=player.maillot||'';
+  (player.poste||[]).forEach(po=>{const cb=document.querySelector('#postes-list input[value="'+po+'"]');if(cb)cb.checked=true;});
+  majPref(); document.getElementById('f-pref').value=player.postePref||'';
+  document.getElementById('f-allergies').value=player.allergies||'';
+  document.getElementById('f-consignes').value=player.consignes||'';
+  document.getElementById('f-tel2').value=player.tel2||'';
+  document.getElementById('f-rdv').value=player.rdvMedical||'à prévoir';
+  document.getElementById('f-notes').value=player.notes||'';
+  if(player.photo)document.getElementById('photo-box').innerHTML=`<img src="${player.photo}">`;
+  // blocs 6 et 7 automatiques
+  const pr=presences[player.id]||[];
+  document.getElementById('presences-recap').innerHTML=pr.length?pr.map(x=>`<div>${x.date} — ${x.type}</div>`).join(''):'<span class="auto">Aucune présence enregistrée.</span>';
+  const mc=matchs[player.id]||[];
+  document.getElementById('matchs-recap').innerHTML=mc.length?mc.map(x=>`<div>${x.date} — ${x.adversaire} (${x.type})</div>`).join(''):'<span class="auto">Aucune convocation.</span>';
+  // historique
+  const h=hist[player.id]||[];
+  document.getElementById('historique').innerHTML=h.length?h.map(x=>`<div class="hist">${x}</div>`).join(''):'<span class="auto">Aucun changement.</span>';
+  renderParents(); renderDocs();
+}
+
+function sauvegarder(){
+  player.nom=document.getElementById('f-nom').value;
+  player.prenom=document.getElementById('f-prenom').value;
+  player.dnaiss=document.getElementById('f-dnaiss').value;
+  player.lnaiss=document.getElementById('f-lnaiss').value;
+  player.cat=document.getElementById('f-cat').value;
+  player.sexe=(document.querySelector('input[name=sexe]:checked')||{}).value||'';
+  player.rue=document.getElementById('f-rue').value;
+  player.cp=document.getElementById('f-cp').value;
+  player.ville=document.getElementById('f-ville').value;
+  player.licence=document.getElementById('f-licence').value;
+  player.licenceValidite=document.getElementById('f-validite').value;
+  player.licenceStatut=document.getElementById('f-statut-lic').value;
+  player.maillot=document.getElementById('f-maillot').value;
+  player.poste=[...document.querySelectorAll('#postes-list input:checked')].map(i=>i.value);
+  player.postePref=document.getElementById('f-pref').value;
+  player.allergies=document.getElementById('f-allergies').value;
+  player.consignes=document.getElementById('f-consignes').value;
+  player.contactUrgence=document.getElementById('f-contact').value;
+  player.tel2=document.getElementById('f-tel2').value;
+  player.rdvMedical=document.getElementById('f-rdv').value;
+  player.notes=document.getElementById('f-notes').value;
+  player.updated=new Date().toISOString();
+  const idx=players.findIndex(p=>p.id===player.id);
+  if(idx>=0)players[idx]=player; else players.push(player);
+  if(!hist[player.id])hist[player.id]=[];
+  hist[player.id].push(new Date().toLocaleString('fr-FR')+' — Fiche '+(isNew?'créée':'modifiée'));
+  save('players',players); save('parents',parents); save('docs',docs); save('hist',hist);
+  location.href='categorie.html?cat='+player.cat;
+}
+remplir();
+</script>
+</body>
+</html>
