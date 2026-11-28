@@ -48,3 +48,34 @@ dialog::backdrop { background:rgba(0,0,0,.3); }
 dialog label.field select, dialog label.field input { display:block; width:100%; margin:6px 0 0; }
 dialog h2 { margin:0 0 16px; }
 .acts { display:flex; gap:12px; }
+
+/* Adaptation mobile et petits écrans */
+html { -webkit-text-size-adjust: 100%; }
+body { min-width: 320px; }
+button, input, select { font: inherit; }
+button, .btn, .lnk, nav a { touch-action: manipulation; }
+.tw { max-width: 100%; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  header { height: 64px; padding: 0 16px 0 76px; }
+  .logo { font-size: 17px; line-height: 1.2; }
+  .floating-burger { top: 8px; left: 12px; width: 44px; height: 44px; }
+  main { width: 100%; padding: 28px 14px 80px; }
+  h1 { font-size: 24px; margin-bottom: 22px; }
+  h2 { font-size: 18px; margin: 26px 0 12px; }
+  .bar { align-items: stretch; }
+  .bar > input, .bar > select, .bar > button { width: 100%; min-height: 44px; }
+  .btn { min-height: 44px; padding: 11px 16px; }
+  th, td { padding: 10px 11px; font-size: 14px; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .stat { padding: 16px; }
+  .stat .num { font-size: 25px; }
+  dialog { padding: 18px; max-height: 88vh; }
+  .grid2 { grid-template-columns: 1fr; }
+  .wide { grid-column: auto; }
+  .acts { flex-wrap: wrap; }
+  .acts .btn { flex: 1 1 120px; }
+}
+@media (max-width: 360px) {
+  .stats { grid-template-columns: 1fr; }
+  nav { width: min(270px, 85vw); }
+}
