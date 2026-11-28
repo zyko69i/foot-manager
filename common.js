@@ -75,6 +75,7 @@
     if (save) { saveP(); saveM(); saveT(); saveC(); }
   }
   function purge(id) { // supprime les traces d'un joueur supprimé
+    const md = store.get("matchDetails", {}); Object.keys(md).forEach(mid => { if (Array.isArray(md[mid].players)) md[mid].players = md[mid].players.filter(x => x.playerId !== id); }); store.set("matchDetails", md);
     ["pres", "conv"].forEach(k => { const o = store.get(k, {}); Object.keys(o).forEach(c => { o[c] = o[c].filter(i => i !== id); }); store.set(k, o); });
     const dc = store.get("docs", {}); delete dc[id]; store.set("docs", dc);
     const ev = store.get("evaluations", {}); delete ev[id]; store.set("evaluations", ev);
@@ -414,7 +415,7 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
       main.innerHTML = `<h1>Paramètres</h1><label class="field">Nom du club<input type="text" id="club" maxlength="40"></label><button id="save" class="btn" type="button">Enregistrer</button> <button id="reset" class="btn alt" type="button">Réinitialiser les données</button><p id="msg" class="note" role="status"></p>`;
       $("club").value = club;
       $("save").addEventListener("click", () => { const v = sp($("club").value) || DEF_CLUB; if (store.set("club", v)) { $("logo").textContent = v; $("navname").textContent = v; $("msg").textContent = "Enregistré sur cet appareil."; } });
-      $("reset").addEventListener("click", () => { if (confirm("Remplacer tous les joueurs, matchs, présences, convocations et documents par les données d'exemple ?")) { ["players", "matches", "pres", "attendance", "conv", "docs", "trainings", "contacts", "evaluations"].forEach(k => store.del(k)); loadAll(true); $("msg").textContent = "Données réinitialisées."; } });
+      $("reset").addEventListener("click", () => { if (confirm("Remplacer tous les joueurs, matchs, présences, convocations et documents par les données d'exemple ?")) { ["players", "matches", "pres", "attendance", "conv", "docs", "trainings", "contacts", "evaluations", "matchDetails"].forEach(k => store.del(k)); loadAll(true); $("msg").textContent = "Données réinitialisées."; } });
     },
     export() {
       main.innerHTML = `<h1>Export</h1><p class="note">Fichiers CSV lisibles dans Excel, et sauvegarde complète au format JSON.</p><div class="bar"><button id="dp" class="btn" type="button">Joueurs (CSV)</button><button id="dm" class="btn" type="button">Matchs (CSV)</button><button id="dr" class="btn" type="button">Présences (CSV)</button><button id="dt" class="btn" type="button">Entraînements (CSV)</button><button id="dc" class="btn" type="button">Contacts (CSV)</button><button id="dj" class="btn alt" type="button">Sauvegarde (JSON)</button></div><h2>Restaurer une sauvegarde</h2><input type="file" id="imp" accept=".json,application/json" aria-label="Fichier de sauvegarde"><p id="msg" class="note" role="status"></p>`;
@@ -424,14 +425,14 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
       $("dr").addEventListener("click", () => { const att = store.get("attendance", {}), legacy = store.get("pres", {}), rows = []; Object.keys(att).sort().forEach(k => { const [kind, c, d] = k.split("|"); Object.entries(att[k]).forEach(([id, status]) => { if (idn(+id)) rows.push([d, kind, c, idn(+id), status]); }); }); Object.keys(legacy).sort().forEach(k => { const [c, d] = k.split("|"); legacy[k].forEach(id => { if (idn(id) && !Object.keys(att).some(a => a.endsWith("|" + c + "|" + d))) rows.push([d, "Ancienne feuille", c, idn(id), "Présent"]); }); }); download("presences.csv", csv([["Date", "Type", "Catégorie", "Joueur", "Statut"], ...rows]), "text/csv", 1); });
       $("dt").addEventListener("click", () => download("entrainements.csv", csv([["Jour", "Début", "Durée (min)", "Catégorie", "Installation"], ...T.map(t => [t.day, t.time, t.dur, t.cat, t.venue])]), "text/csv", 1));
       $("dc").addEventListener("click", () => download("contacts.csv", csv([["Nom", "Rôle", "Catégorie", "Téléphone", "E-mail"], ...C.map(c => [c.name, c.role, c.cat || "Toutes", c.phone, c.email])]), "text/csv", 1));
-      $("dj").addEventListener("click", () => download("sauvegarde-" + today() + ".json", JSON.stringify({ v: 4, club, players: P, matches: M, trainings: T, contacts: C, pres: store.get("pres", {}), attendance: store.get("attendance", {}), conv: store.get("conv", {}), docs: store.get("docs", {}), evaluations: store.get("evaluations", {}) }, null, 1), "application/json", 0));
+      $("dj").addEventListener("click", () => download("sauvegarde-" + today() + ".json", JSON.stringify({ v: 4, club, players: P, matches: M, trainings: T, contacts: C, pres: store.get("pres", {}), attendance: store.get("attendance", {}), conv: store.get("conv", {}), docs: store.get("docs", {}), evaluations: store.get("evaluations", {}), matchDetails: store.get("matchDetails", {}) }, null, 1), "application/json", 0));
       $("imp").addEventListener("change", async e => {
         const file = e.target.files[0]; if (!file) return;
         try {
           const j = JSON.parse(await file.text()); if (!Array.isArray(j.players) || !Array.isArray(j.matches)) throw 0;
           if (!confirm("Remplacer toutes les données actuelles par cette sauvegarde ?")) { e.target.value = ""; return; }
           store.set("players", j.players.map(cleanP)); store.set("matches", j.matches.map(cleanM)); store.set("trainings", Array.isArray(j.trainings) ? j.trainings.map(cleanT) : []); store.set("contacts", Array.isArray(j.contacts) ? j.contacts.map(cleanC) : seedContacts());
-          ["pres", "attendance", "conv", "docs", "evaluations"].forEach(k => store.set(k, j[k] && typeof j[k] === "object" && !Array.isArray(j[k]) ? j[k] : {}));
+          ["pres", "attendance", "conv", "docs", "evaluations", "matchDetails"].forEach(k => store.set(k, j[k] && typeof j[k] === "object" && !Array.isArray(j[k]) ? j[k] : {}));
           if (typeof j.club === "string") store.set("club", sp(j.club).slice(0, 40) || DEF_CLUB);
           location.reload();
         } catch (_) { $("msg").textContent = "Fichier invalide."; e.target.value = ""; }
