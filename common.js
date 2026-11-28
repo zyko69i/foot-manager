@@ -265,19 +265,43 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
       draw();
     },
     presences() {
-      main.innerHTML = `<h1>Présences</h1><div class="bar"><label>Catégorie <select id="cat">${opts(CATS, store.get("presCat", "U6"))}</select></label><label>Date <input type="date" id="dt" value="${today()}"></label></div><div class="bar"><button class="btn alt" id="all" type="button">Cocher les actifs</button><button class="btn alt" id="none" type="button">Tout décocher</button></div><p id="count" class="note" role="status"></p><div id="list"></div>`;
-      const key = () => $("cat").value + "|" + $("dt").value, boxes = () => [...$("list").querySelectorAll("input")];
-      const count = () => { $("count").textContent = boxes().filter(i => i.checked).length + " présent(s) sur " + boxes().length; };
+      const STATUS = ["Présent", "Absent", "Excusé", "En retard"];
+      main.innerHTML = '<h1>Suivi des présences</h1><p class="note">Enregistre le statut de chaque joueur pour une séance ou un rendez-vous. Les données sont conservées sur cet appareil.</p><div class="bar"><label>Catégorie <select id="cat">' + opts(CATS, store.get("presCat", "U6")) + '</select></label><label>Date <input type="date" id="dt" value="' + today() + '"></label><label>Type <select id="kind"><option>Entraînement</option><option>Match</option><option>Autre</option></select></label></div><div class="bar"><button class="btn alt" id="all" type="button">Tous présents</button><button class="btn alt" id="none" type="button">Tous absents</button><button class="btn" id="save" type="button">Enregistrer la feuille</button></div><p id="count" class="note" role="status"></p><div id="list"></div><p id="msg" class="note" role="status"></p>';
+      const key = () => $("kind").value + "|" + $("cat").value + "|" + $("dt").value;
+      const players = () => P.filter(p => p.cat === $("cat").value).sort(byNum);
+      const current = () => {
+        const all = store.get("attendance", {}), k = key();
+        if (all[k]) return all[k];
+        const legacy = new Set(store.get("pres", {})[$("cat").value + "|" + $("dt").value] || []);
+        const migrated = {};
+        players().forEach(p => { migrated[p.id] = legacy.has(p.id) ? "Présent" : "Absent"; });
+        return migrated;
+      };
+      const boxes = () => [...$("list").querySelectorAll("select[data-id]")];
+      const count = () => {
+        const vals = boxes().map(x => x.value), totals = STATUS.map(st => vals.filter(v => v === st).length);
+        $("count").textContent = players().length + " joueur(s) · " + totals.map((n,i) => STATUS[i] + " : " + n).join(" · ");
+      };
       const draw = () => {
-        if (!validDate($("dt").value)) { $("list").innerHTML = `<p class="note">Choisis une date valide.</p>`; $("count").textContent = ""; return; }
-        store.set("presCat", $("cat").value); const s = new Set(store.get("pres", {})[key()] || []);
-        $("list").innerHTML = P.filter(p => p.cat === $("cat").value).sort(byNum).map(p => `<label class="row"><input type="checkbox" data-id="${p.id}" data-s="${p.status}"${s.has(p.id) ? " checked" : ""}>${p.num}. ${esc(p.name)} ${bd(p.status)}</label>`).join("") || `<p class="note">Aucun joueur dans cette catégorie.</p>`;
+        if (!validDate($("dt").value)) { $("list").innerHTML = '<p class="note">Choisis une date valide.</p>'; $("count").textContent = ""; return; }
+        store.set("presCat", $("cat").value);
+        const saved = current();
+        $("list").innerHTML = players().map(p => {
+          const value = STATUS.includes(saved[p.id]) ? saved[p.id] : "Absent";
+          return '<label class="row" style="justify-content:space-between;gap:12px"><span>' + p.num + '. ' + esc(p.name) + ' <small>' + esc(p.pos) + ' · ' + esc(p.status) + '</small></span><select data-id="' + p.id + '" aria-label="Statut de présence de ' + esc(p.name) + '">' + opts(STATUS,value) + '</select></label>';
+        }).join("") || '<p class="note">Aucun joueur dans cette catégorie.</p>';
         count();
       };
-      const save = () => { const pr = store.get("pres", {}), ids = boxes().filter(i => i.checked).map(i => +i.dataset.id); if (ids.length) pr[key()] = ids; else delete pr[key()]; store.set("pres", pr); count(); };
-      $("cat").addEventListener("change", draw); $("dt").addEventListener("change", draw); $("list").addEventListener("change", save);
-      $("all").addEventListener("click", () => { boxes().forEach(i => { i.checked = i.dataset.s === "Actif"; }); save(); });
-      $("none").addEventListener("click", () => { boxes().forEach(i => { i.checked = false; }); save(); });
+      $("cat").addEventListener("change", draw); $("dt").addEventListener("change", draw); $("kind").addEventListener("change", draw);
+      $("list").addEventListener("change", count);
+      $("all").addEventListener("click", () => { boxes().forEach(x => x.value = "Présent"); count(); });
+      $("none").addEventListener("click", () => { boxes().forEach(x => x.value = "Absent"); count(); });
+      $("save").addEventListener("click", () => {
+        if (!validDate($("dt").value)) { $("msg").textContent = "Date invalide."; return; }
+        const all = store.get("attendance", {});
+        all[key()] = Object.fromEntries(boxes().map(x => [x.dataset.id, x.value]));
+        if (store.set("attendance", all)) $("msg").textContent = "Feuille enregistrée : " + key() + ".";
+      });
       draw();
     },
     convocations() {
@@ -390,24 +414,24 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
       main.innerHTML = `<h1>Paramètres</h1><label class="field">Nom du club<input type="text" id="club" maxlength="40"></label><button id="save" class="btn" type="button">Enregistrer</button> <button id="reset" class="btn alt" type="button">Réinitialiser les données</button><p id="msg" class="note" role="status"></p>`;
       $("club").value = club;
       $("save").addEventListener("click", () => { const v = sp($("club").value) || DEF_CLUB; if (store.set("club", v)) { $("logo").textContent = v; $("navname").textContent = v; $("msg").textContent = "Enregistré sur cet appareil."; } });
-      $("reset").addEventListener("click", () => { if (confirm("Remplacer tous les joueurs, matchs, présences, convocations et documents par les données d'exemple ?")) { ["players", "matches", "pres", "conv", "docs", "trainings", "contacts"].forEach(k => store.del(k)); loadAll(true); $("msg").textContent = "Données réinitialisées."; } });
+      $("reset").addEventListener("click", () => { if (confirm("Remplacer tous les joueurs, matchs, présences, convocations et documents par les données d'exemple ?")) { ["players", "matches", "pres", "attendance", "conv", "docs", "trainings", "contacts", "evaluations"].forEach(k => store.del(k)); loadAll(true); $("msg").textContent = "Données réinitialisées."; } });
     },
     export() {
       main.innerHTML = `<h1>Export</h1><p class="note">Fichiers CSV lisibles dans Excel, et sauvegarde complète au format JSON.</p><div class="bar"><button id="dp" class="btn" type="button">Joueurs (CSV)</button><button id="dm" class="btn" type="button">Matchs (CSV)</button><button id="dr" class="btn" type="button">Présences (CSV)</button><button id="dt" class="btn" type="button">Entraînements (CSV)</button><button id="dc" class="btn" type="button">Contacts (CSV)</button><button id="dj" class="btn alt" type="button">Sauvegarde (JSON)</button></div><h2>Restaurer une sauvegarde</h2><input type="file" id="imp" accept=".json,application/json" aria-label="Fichier de sauvegarde"><p id="msg" class="note" role="status"></p>`;
       const idn = id => (P.find(p => p.id === id) || {}).name;
       $("dp").addEventListener("click", () => download("joueurs.csv", csv([["Catégorie", "N°", "Joueur", "Poste", "Statut", "Buts", "Passes", "Jaunes", "Rouges", "Minutes"], ...P.map(p => [p.cat, p.num, p.name, p.pos, p.status, p.g, p.a, p.y, p.r, p.m])]), "text/csv", 1));
       $("dm").addEventListener("click", () => download("matchs.csv", csv([["Date", "Heure", "Catégorie", "Compétition", "Adversaire", "Lieu", "Nos buts", "Buts adverses"], ...M.map(m => [m.date, m.time, m.cat, m.comp, m.opp, m.home ? "Domicile" : "Extérieur", m.sf ?? "", m.sa ?? ""])]), "text/csv", 1));
-      $("dr").addEventListener("click", () => { const pr = store.get("pres", {}), rows = []; Object.keys(pr).sort().forEach(k => { const [c, d] = k.split("|"); pr[k].forEach(id => { if (idn(id)) rows.push([d, c, idn(id)]); }); }); download("presences.csv", csv([["Date", "Catégorie", "Joueur"], ...rows]), "text/csv", 1); });
+      $("dr").addEventListener("click", () => { const att = store.get("attendance", {}), legacy = store.get("pres", {}), rows = []; Object.keys(att).sort().forEach(k => { const [kind, c, d] = k.split("|"); Object.entries(att[k]).forEach(([id, status]) => { if (idn(+id)) rows.push([d, kind, c, idn(+id), status]); }); }); Object.keys(legacy).sort().forEach(k => { const [c, d] = k.split("|"); legacy[k].forEach(id => { if (idn(id) && !Object.keys(att).some(a => a.endsWith("|" + c + "|" + d))) rows.push([d, "Ancienne feuille", c, idn(id), "Présent"]); }); }); download("presences.csv", csv([["Date", "Type", "Catégorie", "Joueur", "Statut"], ...rows]), "text/csv", 1); });
       $("dt").addEventListener("click", () => download("entrainements.csv", csv([["Jour", "Début", "Durée (min)", "Catégorie", "Installation"], ...T.map(t => [t.day, t.time, t.dur, t.cat, t.venue])]), "text/csv", 1));
       $("dc").addEventListener("click", () => download("contacts.csv", csv([["Nom", "Rôle", "Catégorie", "Téléphone", "E-mail"], ...C.map(c => [c.name, c.role, c.cat || "Toutes", c.phone, c.email])]), "text/csv", 1));
-      $("dj").addEventListener("click", () => download("sauvegarde-" + today() + ".json", JSON.stringify({ v: 3, club, players: P, matches: M, trainings: T, contacts: C, pres: store.get("pres", {}), conv: store.get("conv", {}), docs: store.get("docs", {}), evaluations: store.get("evaluations", {}) }, null, 1), "application/json", 0));
+      $("dj").addEventListener("click", () => download("sauvegarde-" + today() + ".json", JSON.stringify({ v: 4, club, players: P, matches: M, trainings: T, contacts: C, pres: store.get("pres", {}), attendance: store.get("attendance", {}), conv: store.get("conv", {}), docs: store.get("docs", {}), evaluations: store.get("evaluations", {}) }, null, 1), "application/json", 0));
       $("imp").addEventListener("change", async e => {
         const file = e.target.files[0]; if (!file) return;
         try {
           const j = JSON.parse(await file.text()); if (!Array.isArray(j.players) || !Array.isArray(j.matches)) throw 0;
           if (!confirm("Remplacer toutes les données actuelles par cette sauvegarde ?")) { e.target.value = ""; return; }
           store.set("players", j.players.map(cleanP)); store.set("matches", j.matches.map(cleanM)); store.set("trainings", Array.isArray(j.trainings) ? j.trainings.map(cleanT) : []); store.set("contacts", Array.isArray(j.contacts) ? j.contacts.map(cleanC) : seedContacts());
-          ["pres", "conv", "docs", "evaluations"].forEach(k => store.set(k, j[k] && typeof j[k] === "object" && !Array.isArray(j[k]) ? j[k] : {}));
+          ["pres", "attendance", "conv", "docs", "evaluations"].forEach(k => store.set(k, j[k] && typeof j[k] === "object" && !Array.isArray(j[k]) ? j[k] : {}));
           if (typeof j.club === "string") store.set("club", sp(j.club).slice(0, 40) || DEF_CLUB);
           location.reload();
         } catch (_) { $("msg").textContent = "Fichier invalide."; e.target.value = ""; }
