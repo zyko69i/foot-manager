@@ -399,4 +399,3 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
         .catch(error => console.warn("Mode hors ligne indisponible :", error)));
     }
   })();
-})();
