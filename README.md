@@ -1,9 +1,20 @@
 # MIMOUNI Soccer Stats
+
 Application de gestion de club de football (U6-U18).
 Site : https://foot-manager-umber.vercel.app
 GitHub : https://github.com/zyko69i/foot-manager
 
-Pages : tableau de bord, catégories (joueurs), matchs, présences, convocations, documents, terrains et entraînements, contacts, paramètres, export.
-Installations : 1 grand terrain synthétique, 2 grands terrains en herbe, 1 gymnase (entraînement uniquement).
+## Modules
+Tableau de bord, catégories (joueurs), matchs, présences, convocations, documents, terrains et entraînements, contacts, paramètres, export CSV et sauvegarde/restauration JSON.
+
+## Installations
+1 grand terrain synthétique, 2 grands terrains en herbe, 1 gymnase (entraînement uniquement).
 Découpage des grands terrains : U6-U8 en 6, U9-U13 en 2, U14+ terrain entier (constante SPLIT dans common.js).
-Version 4 : application statique (HTML/CSS/JS), données stockées dans le navigateur (localStorage). Déploiement automatique sur Vercel à chaque push sur main.
+
+## Installation et fonctionnement
+Application statique HTML/CSS/JavaScript, déployée sur Vercel à chaque push sur main.
+Application web progressive (PWA) : ajout possible à l'écran d'accueil sur les appareils compatibles et mise en cache des pages pour consultation hors connexion après le premier chargement.
+Les données sont enregistrées dans le stockage local du navigateur. Elles restent propres à chaque appareil et navigateur : pas de compte, pas de synchronisation entre utilisateurs/appareils et pas de stockage cloud à ce stade. Faire régulièrement une sauvegarde JSON depuis Export.
+
+## Version
+Version 4 enrichie : meilleure adaptation mobile, installation PWA et cache hors connexion.
