@@ -1,5 +1,5 @@
 (function () {
-  const NAV = [["index.html","Tableau de bord"],["categories.html","Catégories"],["matchs.html","Matchs"],["presences.html","Présences"],["convocations.html","Convocations"],["documents.html","Documents"],["terrains.html","Terrains"],["contacts.html","Contacts"],["parametres.html","Paramètres"],["export.html","Export"]];
+  const NAV = [["index.html","Tableau de bord"],["categories.html","Catégories"],["progression.html","Progression joueurs"],["matchs.html","Matchs"],["presences.html","Présences"],["convocations.html","Convocations"],["documents.html","Documents"],["terrains.html","Terrains"],["contacts.html","Contacts"],["parametres.html","Paramètres"],["export.html","Export"]];
   const CATS = []; for (let a = 6; a <= 18; a++) CATS.push("U" + a);
   const STAT = ["Actif","Blessé","Suspendu"], POS = ["Gardien","Défenseur","Milieu","Attaquant","Non défini"], COMP = ["Championnat","Coupe","Amical","Tournoi"];
   const DOCS = ["Licence","Certificat médical","Autorisation parentale","Règlement signé"], MAX_CONVOC = 14, DEF_CLUB = "MIMOUNI Soccer Stats";
@@ -77,6 +77,7 @@
   function purge(id) { // supprime les traces d'un joueur supprimé
     ["pres", "conv"].forEach(k => { const o = store.get(k, {}); Object.keys(o).forEach(c => { o[c] = o[c].filter(i => i !== id); }); store.set(k, o); });
     const dc = store.get("docs", {}); delete dc[id]; store.set("docs", dc);
+    const ev = store.get("evaluations", {}); delete ev[id]; store.set("evaluations", ev);
   }
   const done = m => m.sf !== null && m.sa !== null;
   const res = m => m.sf > m.sa ? "V" : m.sf < m.sa ? "D" : "N";
@@ -181,7 +182,7 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
       const draw = () => {
         const q = norm(f.q), list = P.filter(p => (f.c === "Toutes" || p.cat === f.c) && (f.s === "Tous" || p.status === f.s) && norm(p.name).includes(q)).sort((a, b) => CATS.indexOf(a.cat) - CATS.indexOf(b.cat) || SORT[f.o](a, b) || a.name.localeCompare(b.name));
         $("count").textContent = list.length + " joueur" + (list.length > 1 ? "s" : "");
-        $("tbl").innerHTML = list.length ? tbl(["N°", "Joueur", "Poste", "Cat.", "Statut", "Buts", "Passes", "Jaunes", "Rouges", "Min.", ""], list.map(p => `<tr><td>${p.num}</td><td>${esc(p.name)}</td><td>${p.pos}</td><td>${p.cat}</td><td>${bd(p.status)}</td><td>${p.g}</td><td>${p.a}</td><td>${p.y}</td><td>${p.r}</td><td>${p.m}</td><td class="act"><button type="button" class="lnk" data-e="${p.id}">Modifier</button><button type="button" class="lnk del" data-d="${p.id}">Supprimer</button></td></tr>`).join("")) : `<p class="note">Aucun joueur ne correspond à ces filtres.</p>`;
+        $("tbl").innerHTML = list.length ? tbl(["N°", "Joueur", "Poste", "Cat.", "Statut", "Buts", "Passes", "Jaunes", "Rouges", "Min.", ""], list.map(p => `<tr><td>${p.num}</td><td>${esc(p.name)}</td><td>${p.pos}</td><td>${p.cat}</td><td>${bd(p.status)}</td><td>${p.g}</td><td>${p.a}</td><td>${p.y}</td><td>${p.r}</td><td>${p.m}</td><td class="act"><a class="lnk" href="progression.html?id=${p.id}">Fiche FIFA</a><button type="button" class="lnk" data-e="${p.id}">Modifier</button><button type="button" class="lnk del" data-d="${p.id}">Supprimer</button></td></tr>`).join("")) : `<p class="note">Aucun joueur ne correspond à ces filtres.</p>`;
       };
       $("q").addEventListener("input", e => { f.q = e.target.value; draw(); });
       $("fc").addEventListener("change", e => { f.c = e.target.value; draw(); });
@@ -197,6 +198,53 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
         if (b.dataset.e !== undefined) dialog("Modifier le joueur", PF, p, vP(p), o => { Object.assign(p, pl(o)); saveP(); draw(); });
         else if (confirm("Supprimer " + p.name + " ?")) { P.splice(P.indexOf(p), 1); saveP(); purge(id); draw(); }
       });
+      draw();
+    },
+    progression() {
+      const GROUPS = [
+        {title:"Physique",items:["Vitesse","Accélération","Endurance","Force","Détente"]},
+        {title:"Technique",items:["Contrôle de balle","Dribble","Passe courte","Passe longue","Tir","Finition","Tacle"]},
+        {title:"Tactique",items:["Placement","Vision du jeu","Prise de décision","Jeu collectif"]},
+        {title:"Mental",items:["Concentration","Détermination","Discipline"]},
+        {title:"Gardien",items:["Réflexes","Prise de balle","Jeu au pied"]}
+      ];
+      const ALL=GROUPS.flatMap(g=>g.items), params=new URLSearchParams(location.search);
+      let player=P.find(p=>p.id===Number(params.get("id")))||P[0];
+      const db=()=>store.get("evaluations",{}), hist=()=>((db()[player.id]||[]).slice().sort((a,b)=>a.month.localeCompare(b.month)));
+      const clamp=n=>Math.max(0,Math.min(99,Math.round(Number(n)||0)));
+      const overall=r=>Math.round(ALL.reduce((s,k)=>s+(Number(r[k])||0),0)/ALL.length);
+      const color=n=>n>=80?"#16834a":n>=65?"#2FAEE0":n>=50?"#c18a19":"#b94a48";
+      main.className="player-profile";
+      main.innerHTML=`<style>
+        .player-profile{max-width:1120px}.pf-head{background:linear-gradient(130deg,#102b46,#1769a0);color:white;border-radius:22px;padding:22px;margin:16px 0;display:grid;grid-template-columns:104px 1fr auto;gap:18px;align-items:center}
+        .pf-rating{width:100px;height:100px;border:3px solid #65d6f1;border-radius:18px;display:grid;place-content:center;text-align:center}.pf-rating strong{font-size:40px;line-height:1}.pf-rating span{font-size:11px}
+        .pf-head h1{color:white;margin:0 0 7px;font-size:25px}.pf-head p{margin:4px 0;opacity:.9}.pf-head select{margin:0;max-width:240px}
+        .pf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.pf-card{background:white;border:1px solid #e8edf2;border-radius:16px;padding:16px;margin:14px 0}.pf-card h2{margin:0 0 12px;font-size:18px;color:#183d5b}
+        .pf-skill{display:grid;grid-template-columns:1fr 42px;gap:8px;align-items:center;margin:10px 0}.pf-skill label{font-size:14px}.pf-skill input[type=range]{display:block;width:100%;margin:5px 0 0;accent-color:#2FAEE0}.pf-skill strong{color:white;text-align:center;border-radius:8px;padding:6px 2px}
+        .pf-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}.pf-form label{font-size:13px;color:#52616d}.pf-form input,.pf-form textarea{display:block;width:100%;margin:5px 0 0;padding:10px;border:1px solid #ccd6df;border-radius:9px;font:inherit}.pf-form textarea{min-height:84px;grid-column:1/-1}
+        .pf-entry{border:1px solid #e7edf2;border-radius:12px;padding:12px;margin:9px 0;display:flex;justify-content:space-between;gap:12px}.pf-note{font-size:13px;color:#607080}.pf-delta{font-weight:700}
+        @media(max-width:600px){.pf-head{grid-template-columns:78px 1fr;padding:14px;gap:10px}.pf-rating{width:76px;height:76px}.pf-rating strong{font-size:30px}.pf-head select{grid-column:1/-1;max-width:none}.pf-head h1{font-size:20px}}
+      </style><div class="bar"><a class="btn alt" href="categories.html">← Retour aux joueurs</a><label>Joueur <select id="pf-player"></select></label></div><div id="pf-view"></div>`;
+      $("pf-player").innerHTML=P.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(p=>`<option value="${p.id}" ${p.id===player.id?"selected":""}>${esc(p.name)} · ${p.cat}</option>`).join("");
+      $("pf-player").addEventListener("change",()=>{player=P.find(p=>p.id===Number($("pf-player").value))||P[0];history.replaceState(null,"","progression.html?id="+player.id);draw();});
+      function draw(){
+        if(!player){$("pf-view").innerHTML='<p class="note">Ajoute d’abord un joueur dans Catégories.</p>';return;}
+        const h=hist(),cur=h[h.length-1],prev=h[h.length-2],rating=cur?.ratings||{},score=cur?overall(rating):"—",delta=cur&&prev?overall(rating)-overall(prev.ratings):null;
+        const skills=GROUPS.map(g=>`<section class="pf-card"><h2>${g.title}</h2>${g.items.map(k=>{const n=cur?clamp(rating[k]):0;return `<div class="pf-skill"><div><label>${k}</label><input type="range" min="0" max="99" value="${n}" disabled></div><strong style="background:${color(n)}">${cur?n:"—"}</strong></div>`;}).join("")}</section>`).join("");
+        const entries=h.slice().reverse().map(e=>`<div class="pf-entry"><div><strong>${esc(e.month)}</strong><p class="pf-note">${esc(e.coach||"Évaluation entraîneur")} · ${e.trainings||0} entraînement(s) · ${e.matches||0} match(s) · ${e.minutes||0} min</p><p class="pf-note">${esc(e.notes||"Aucun commentaire")}</p></div><strong style="font-size:25px;color:${color(overall(e.ratings))}">${overall(e.ratings)}/99</strong></div>`).join("");
+        $("pf-view").innerHTML=`<div class="pf-head"><div class="pf-rating"><strong>${score}</strong><span>GLOBAL / 99</span></div><div><h1>${esc(player.name)}</h1><p>${esc(player.pos)} · ${player.cat} · N° ${player.num||"—"}</p><p>${player.status} · ${cur?"Évaluation : "+esc(cur.month):"Pas encore évalué"}</p>${delta===null?"":`<p class="pf-delta">${delta>0?"▲ +":delta<0?"▼ ":"="}${delta} depuis le mois précédent</p>`}</div><div><p>Évaluations</p><strong style="font-size:28px">${h.length}</strong></div></div>
+        <h2>Carte des compétences</h2><p class="pf-note">Notes de 0 à 99 attribuées par l’entraîneur. La note globale est la moyenne des compétences renseignées.</p><div class="pf-grid">${skills}</div>
+        <section class="pf-card"><h2>Évaluation mensuelle</h2><p class="pf-note">Les statistiques servent de contexte ; les notes restent l’appréciation de l’entraîneur.</p><form id="pf-form"><div class="pf-form">
+        <label>Mois<input type="month" name="month" value="${new Date().toISOString().slice(0,7)}" required></label><label>Entraîneur<input name="coach" maxlength="60" placeholder="Nom de l’évaluateur"></label>
+        <label>Entraînements suivis<input type="number" name="trainings" min="0" max="99" value="0"></label><label>Matchs joués<input type="number" name="matches" min="0" max="99" value="0"></label>
+        <label>Minutes jouées<input type="number" name="minutes" min="0" max="9999" value="0"></label><label>Buts<input type="number" name="goals" min="0" max="999" value="0"></label>
+        <label>Passes décisives<input type="number" name="assists" min="0" max="999" value="0"></label><label>Présences entraînement (%)<input type="number" name="attendance" min="0" max="100" value="0"></label>
+        <label style="grid-column:1/-1">Commentaires et axes de travail<textarea name="notes" maxlength="1200" placeholder="Progrès observés, points à travailler, attitude, régularité…"></textarea></label></div>
+        <h2 style="margin-top:20px">Notes individuelles (0 à 99)</h2><div class="pf-grid">${GROUPS.map(g=>`<section class="pf-card"><h2>${g.title}</h2>${g.items.map(k=>`<label class="pf-skill"><span>${k}<input type="number" name="skill:${esc(k)}" min="0" max="99" value="${cur?clamp(rating[k]):50}" required></span><strong data-grade="${esc(k)}" style="background:#2FAEE0">${cur?clamp(rating[k]):50}</strong></label>`).join("")}</section>`).join("")}</div><button class="btn" type="submit">Enregistrer l’évaluation du mois</button></form></section>
+        <section class="pf-card"><h2>Historique de progression</h2>${entries||'<p class="note">Aucune évaluation enregistrée. Crée la première ci-dessus.</p>'}</section>`;
+        $("pf-form").querySelectorAll('input[name^="skill:"]').forEach(input=>input.addEventListener("input",()=>{const out=$("pf-form").querySelector('[data-grade="'+CSS.escape(input.name.slice(6))+'"]');if(out)out.textContent=clamp(input.value);}));
+        $("pf-form").addEventListener("submit",e=>{e.preventDefault();const fd=new FormData(e.currentTarget),month=String(fd.get("month")||"");if(!/^\\d{4}-\\d{2}$/.test(month)){toast("Choisis un mois valide.");return;}const r={};ALL.forEach(k=>r[k]=clamp(fd.get("skill:"+k)));const entry={month,coach:sp(fd.get("coach")).slice(0,60),trainings:int(fd.get("trainings"),99),matches:int(fd.get("matches"),99),minutes:int(fd.get("minutes"),9999),goals:int(fd.get("goals"),999),assists:int(fd.get("assists"),999),attendance:int(fd.get("attendance"),100),notes:sp(fd.get("notes")).slice(0,1200),ratings:r};const all=db();all[player.id]=all[player.id]||[];const at=all[player.id].findIndex(x=>x.month===month);if(at>=0){if(!confirm("Une évaluation existe déjà pour ce mois. La remplacer ?"))return;all[player.id][at]=entry;}else all[player.id].push(entry);store.set("evaluations",all);toast("Évaluation mensuelle enregistrée.");draw();});
+      }
       draw();
     },
     matchs() {
@@ -351,14 +399,14 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
       $("dr").addEventListener("click", () => { const pr = store.get("pres", {}), rows = []; Object.keys(pr).sort().forEach(k => { const [c, d] = k.split("|"); pr[k].forEach(id => { if (idn(id)) rows.push([d, c, idn(id)]); }); }); download("presences.csv", csv([["Date", "Catégorie", "Joueur"], ...rows]), "text/csv", 1); });
       $("dt").addEventListener("click", () => download("entrainements.csv", csv([["Jour", "Début", "Durée (min)", "Catégorie", "Installation"], ...T.map(t => [t.day, t.time, t.dur, t.cat, t.venue])]), "text/csv", 1));
       $("dc").addEventListener("click", () => download("contacts.csv", csv([["Nom", "Rôle", "Catégorie", "Téléphone", "E-mail"], ...C.map(c => [c.name, c.role, c.cat || "Toutes", c.phone, c.email])]), "text/csv", 1));
-      $("dj").addEventListener("click", () => download("sauvegarde-" + today() + ".json", JSON.stringify({ v: 2, club, players: P, matches: M, trainings: T, contacts: C, pres: store.get("pres", {}), conv: store.get("conv", {}), docs: store.get("docs", {}) }, null, 1), "application/json", 0));
+      $("dj").addEventListener("click", () => download("sauvegarde-" + today() + ".json", JSON.stringify({ v: 3, club, players: P, matches: M, trainings: T, contacts: C, pres: store.get("pres", {}), conv: store.get("conv", {}), docs: store.get("docs", {}), evaluations: store.get("evaluations", {}) }, null, 1), "application/json", 0));
       $("imp").addEventListener("change", async e => {
         const file = e.target.files[0]; if (!file) return;
         try {
           const j = JSON.parse(await file.text()); if (!Array.isArray(j.players) || !Array.isArray(j.matches)) throw 0;
           if (!confirm("Remplacer toutes les données actuelles par cette sauvegarde ?")) { e.target.value = ""; return; }
           store.set("players", j.players.map(cleanP)); store.set("matches", j.matches.map(cleanM)); store.set("trainings", Array.isArray(j.trainings) ? j.trainings.map(cleanT) : []); store.set("contacts", Array.isArray(j.contacts) ? j.contacts.map(cleanC) : seedContacts());
-          ["pres", "conv", "docs"].forEach(k => store.set(k, j[k] && typeof j[k] === "object" && !Array.isArray(j[k]) ? j[k] : {}));
+          ["pres", "conv", "docs", "evaluations"].forEach(k => store.set(k, j[k] && typeof j[k] === "object" && !Array.isArray(j[k]) ? j[k] : {}));
           if (typeof j.club === "string") store.set("club", sp(j.club).slice(0, 40) || DEF_CLUB);
           location.reload();
         } catch (_) { $("msg").textContent = "Fichier invalide."; e.target.value = ""; }
