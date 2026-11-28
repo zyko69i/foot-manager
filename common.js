@@ -366,6 +366,10 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
     }
   };
   if (pages[page]) pages[page]();
+  // Mise en cache pour utilisation hors connexion (PWA)
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}), { once: true });
+  }
   // Synchronisation entre onglets
   window.addEventListener("storage", e => { if (e.storageArea === localStorage && pages[page]) { loadAll(false); pages[page](); } });
 })();
