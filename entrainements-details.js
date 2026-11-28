@@ -12,7 +12,7 @@ host.addEventListener("click",function(e){var b=e.target.closest("[data-plan]");
 function open(id){
 var ts=read("trainings",[]),t=ts.find(function(x){return x.id===id;});if(!t){alert("Créneau introuvable.");return;}
 var ps=read("players",[]).filter(function(p){return p.cat===t.cat;}).sort(function(a,b){return (a.num||999)-(b.num||999);}),db=read("trainingPlans",{}),old=db[id]||{},selected=new Set(old.players||[]);
-var dlg=document.createElement("dialog");dlg.className="tp-dialog";
+var dlg=document.createElement("dialog");dlg.className="tp-dialog";dlg.dataset.trainingId=id;
 var exercises=["Échauffement","Conduite de balle","Passes et contrôles","Conservation / jeu réduit","Finition","Défense / pressing","Vitesse et coordination","Retour au calme","Autre"];
 var field=function(label,name,value,wide,placeholder){return '<label class="tp-field'+(wide?" tp-wide":"")+'">'+label+'<textarea name="'+name+'" maxlength="1000" placeholder="'+(placeholder||"")+'">'+esc(value||"")+'</textarea></label>';};
 dlg.innerHTML='<div class="tp-wrap"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><h2 style="margin:0">Préparation de séance</h2><p class="tp-muted">'+esc(t.cat)+' · '+esc(t.day)+' · '+esc(t.time)+' · '+t.dur+' min · '+esc(t.venue)+'</p></div><button type="button" class="btn alt" data-close>Fermer</button></div>'+
