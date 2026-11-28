@@ -5,7 +5,7 @@ Site : https://foot-manager-umber.vercel.app
 GitHub : https://github.com/zyko69i/foot-manager
 
 ## Modules
-Tableau de bord, catégories (joueurs), fiches individuelles style FIFA, évaluations mensuelles des compétences (0-99), historique de progression, matchs, présences, convocations, documents, terrains et entraînements, contacts, paramètres, export CSV et sauvegarde/restauration JSON.
+Tableau de bord, catégories (joueurs), fiches individuelles style FIFA, évaluations mensuelles des compétences (0-99), historique de progression, matchs, présences détaillées (présent, absent, excusé, retard), convocations, documents, terrains et entraînements, contacts, paramètres, export CSV et sauvegarde/restauration JSON.
 
 ## Installations
 1 grand terrain synthétique, 2 grands terrains en herbe, 1 gymnase (entraînement uniquement).
@@ -17,7 +17,7 @@ Application web progressive (PWA) : ajout possible à l'écran d'accueil sur les
 Les données sont enregistrées dans le stockage local du navigateur. Elles restent propres à chaque appareil et navigateur : pas de compte, pas de synchronisation entre utilisateurs/appareils et pas de stockage cloud à ce stade. Faire régulièrement une sauvegarde JSON depuis Export.
 
 ## Version
-Version 5 enrichie : meilleure adaptation mobile, installation PWA et cache hors connexion.
+Version 6 : suivi des présences par séance et par type (entraînement, match, autre), avec statuts présent, absent, excusé et en retard. Les feuilles sont historisées par date et catégorie, exportables en CSV et incluses dans les sauvegardes JSON. Le cache PWA est renouvelé pour diffuser la mise à jour.
 
 
 ## Fiches joueurs et progression
