@@ -1,0 +1,20 @@
+{
+  "name": "MIMOUNI Soccer Stats",
+  "short_name": "Soccer Stats",
+  "description": "Gestion de club de football U6 à U18",
+  "lang": "fr-FR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fafafa",
+  "theme_color": "#2FAEE0",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
