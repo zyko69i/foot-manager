@@ -370,8 +370,19 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
   window.addEventListener("storage", e => {
     if (e.storageArea === localStorage && pages[page]) { loadAll(false); pages[page](); }
   });
+  // Manifeste installable et indication de connexion.
+  const pwaManifest = document.createElement("link");
+  pwaManifest.rel = "manifest"; pwaManifest.href = "manifest.webmanifest"; document.head.appendChild(pwaManifest);
+  const theme = document.createElement("meta");
+  theme.name = "theme-color"; theme.content = "#2FAEE0"; document.head.appendChild(theme);
+  const statusBar = document.createElement("div");
+  statusBar.id = "app-status"; statusBar.setAttribute("role", "status");
+  statusBar.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:90;padding:7px 12px;text-align:center;font:12px system-ui;background:#eef7fb;color:#24546b;border-top:1px solid #d5e8f1";
+  const updateStatus = () => { statusBar.textContent = (navigator.onLine ? "En ligne" : "Hors ligne") + " · Données enregistrées sur cet appareil"; };
+  updateStatus(); document.body.appendChild(statusBar);
+  window.addEventListener("online", updateStatus); window.addEventListener("offline", updateStatus);
   // Mise en cache pour utilisation hors connexion (PWA)
   if ("serviceWorker" in navigator && location.protocol === "https:") {
-    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}), { once: true });
+    window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(() => {}), { once: true });
   }
 })();
