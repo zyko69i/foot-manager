@@ -372,4 +372,31 @@ ${sec("Derniers résultats", "matchs.html", last.length ? tbl(["Date", "Cat.", "
   }
   // Synchronisation entre onglets
   window.addEventListener("storage", e => { if (e.storageArea === localStorage && pages[page]) { loadAll(false); pages[page](); } });
+}
+  // Installation PWA, état réseau et rappel du stockage local.
+  (function setupPWA() {
+    const meta = document.createElement("meta");
+    meta.name = "theme-color"; meta.content = "#2FAEE0"; document.head.appendChild(meta);
+    const manifest = document.createElement("link");
+    manifest.rel = "manifest"; manifest.href = "manifest.webmanifest"; document.head.appendChild(manifest);
+    const apple = document.createElement("meta");
+    apple.name = "apple-mobile-web-app-capable"; apple.content = "yes"; document.head.appendChild(apple);
+    function status() {
+      let bar = $("app-status");
+      if (!bar) {
+        bar = document.createElement("div"); bar.id = "app-status";
+        bar.setAttribute("role", "status"); bar.style.cssText =
+          "position:fixed;bottom:0;left:0;right:0;z-index:90;padding:7px 12px;text-align:center;font:12px system-ui;background:#eef7fb;color:#24546b;border-top:1px solid #d5e8f1";
+        document.body.appendChild(bar);
+      }
+      bar.textContent = (navigator.onLine ? "En ligne" : "Hors ligne") + " · Données enregistrées sur cet appareil";
+    }
+    window.addEventListener("online", status);
+    window.addEventListener("offline", status);
+    status();
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js")
+        .catch(error => console.warn("Mode hors ligne indisponible :", error)));
+    }
+  })();
 })();
