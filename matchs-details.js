@@ -1,0 +1,40 @@
+(function(){
+"use strict";
+var esc=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});};
+var get=function(k,d){try{var x=localStorage.getItem(k);return x===null?d:JSON.parse(x);}catch(e){return d;}};
+var set=function(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){alert("Enregistrement impossible : stockage indisponible.");return false;}};
+var formations=["4-3-3","4-4-2","4-2-3-1","3-5-2","3-4-3","4-1-4-1","5-3-2","Autre"];
+var roles=["Titulaire","Remplaçant","Non convoqué"];
+var css=document.createElement("style");
+css.textContent=".md-open{white-space:nowrap}.md-dialog{width:min(980px,96vw);max-height:92vh;border:0;border-radius:18px;padding:0;box-shadow:0 20px 70px #0005}.md-dialog::backdrop{background:#102b46aa}.md-wrap{padding:20px;max-height:92vh;overflow:auto}.md-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.md-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}.md-field{display:flex;flex-direction:column;gap:5px;font-size:13px;color:#52616d}.md-field input,.md-field select,.md-field textarea{width:100%;padding:10px;border:1px solid #ccd6df;border-radius:9px;font:inherit}.md-field textarea{min-height:75px}.md-table{width:100%;border-collapse:collapse;font-size:13px}.md-table th,.md-table td{padding:8px 6px;border-bottom:1px solid #e8edf2;text-align:left}.md-table input,.md-table select{max-width:100%;min-width:0;padding:7px;border:1px solid #ccd6df;border-radius:7px}.md-table input[type=number]{width:65px}.md-table-wrap{overflow:auto}.md-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}.md-note{font-size:13px;color:#647484}@media(max-width:600px){.md-wrap{padding:14px}.md-table{min-width:720px}}";
+document.head.appendChild(css);
+function init(){
+var host=document.getElementById("tbl");if(!host)return;
+function buttons(){host.querySelectorAll("tr").forEach(function(row){var edit=row.querySelector("button[data-e]");if(!edit||row.querySelector(".md-open"))return;var cell=row.querySelector("td:last-child");if(!cell)return;var b=document.createElement("button");b.type="button";b.className="lnk md-open";b.dataset.detail=edit.dataset.e;b.textContent="Feuille match";cell.insertBefore(b,edit);});}
+new MutationObserver(buttons).observe(host,{childList:true,subtree:true});buttons();
+host.addEventListener("click",function(e){var b=e.target.closest("[data-detail]");if(b){e.preventDefault();open(Number(b.dataset.detail));}});
+}
+function open(id){
+var matches=get("matches",[]),players=get("players",[]),match=matches.find(function(m){return m.id===id;});if(!match){alert("Ce match n'existe plus.");return;}
+var old=get("matchDetails",{})[id]||{},roster=players.filter(function(p){return p.cat===match.cat;}).sort(function(a,b){return (a.num||999)-(b.num||999)||a.name.localeCompare(b.name);}),saved=Array.isArray(old.players)?old.players:[];
+var map={};saved.forEach(function(x){map[String(x.playerId)]=x;});
+var dlg=document.createElement("dialog");dlg.className="md-dialog";
+var top='<div class="md-wrap"><div class="md-top"><div><h2 style="margin:0">Feuille de match</h2><p class="md-note">'+esc(match.cat)+" · "+esc(match.opp)+" · "+esc(match.date)+" "+esc(match.time||"")+'</p></div><button type="button" class="btn alt" data-close>Fermer</button></div>';
+var fields='<div class="md-grid"><label class="md-field">Formation<select name="formation">'+formations.map(function(x){return '<option '+(x===(old.formation||"4-3-3")?"selected":"")+'>'+x+'</option>';}).join("")+'</select></label><label class="md-field">Entraîneur<input name="coach" maxlength="60" value="'+esc(old.coach||"")+'"></label><label class="md-field">Capitaine<select name="captain"><option value="">Non renseigné</option>'+roster.map(function(p){return '<option value="'+p.id+'" '+(String(old.captain||"")===String(p.id)?"selected":"")+'>'+esc(p.name)+'</option>';}).join("")+'</select></label><label class="md-field">Objectif / consigne<input name="objective" maxlength="180" value="'+esc(old.objective||"")+'" placeholder="Ex. pressing haut"></label></div>';
+var rows=roster.map(function(p){var x=map[String(p.id)]||{},role=x.role||"Non convoqué";return '<tr data-player="'+p.id+'"><td><b>'+(p.num||"—")+'.</b> '+esc(p.name)+'</td><td><select data-k="role">'+roles.map(function(r){return '<option '+(r===role?"selected":"")+'>'+r+'</option>';}).join("")+'</select></td><td><select data-k="position">'+["Gardien","Défenseur","Milieu","Attaquant"].map(function(r){return '<option '+(r===(x.position||p.pos)?"selected":"")+'>'+r+'</option>';}).join("")+'</select></td>'+["minutes","goals","assists","yellow","red","rating"].map(function(k){var v=x[k]==null?"":x[k],max=k==="minutes"?150:k==="rating"?10:k==="red"?1:20,step=k==="rating"?' step="0.5"':"";return '<td><input data-k="'+k+'" type="number" min="0" max="'+max+'"'+step+' value="'+v+'" placeholder="—"></td>';}).join("")+'</tr>';}).join("");
+var table='<h3>Effectif et statistiques individuelles</h3><p class="md-note">Choisis les titulaires et remplaçants, puis saisis minutes, buts, passes décisives et cartons.</p><div class="md-table-wrap"><table class="md-table"><thead><tr><th>Joueur</th><th>Rôle</th><th>Poste</th><th>Min.</th><th>Buts</th><th>Passes</th><th>Jaunes</th><th>Rouges</th><th>Note /10</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+var notes='<div class="md-grid"><label class="md-field">Bilan tactique<textarea name="tactics" maxlength="1200" placeholder="Organisation, points forts, difficultés...">'+esc(old.tactics||"")+'</textarea></label><label class="md-field">Compte-rendu / axes de progrès<textarea name="report" maxlength="1600" placeholder="Résumé du match, décisions, points à travailler...">'+esc(old.report||"")+'</textarea></label><label class="md-field">Événements du match<textarea name="events" maxlength="1600" placeholder="12 min : but – joueur ; 35 min : remplacement – joueur A / joueur B">'+esc(old.events||"")+'</textarea></label></div><div class="md-actions"><button type="button" class="btn alt" data-close>Annuler</button><button type="button" class="btn" data-save>Enregistrer la feuille</button></div></div>';
+dlg.innerHTML=top+fields+table+notes;document.body.appendChild(dlg);
+function val(n){var el=dlg.querySelector('[name="'+n+'"]');return el?el.value:"";}
+dlg.querySelectorAll("[data-close]").forEach(function(b){b.addEventListener("click",function(){dlg.close();});});
+dlg.addEventListener("close",function(){dlg.remove();});
+dlg.querySelector("[data-save]").addEventListener("click",function(){
+var data=[].slice.call(dlg.querySelectorAll("tbody tr[data-player]")).map(function(tr){var o={playerId:Number(tr.dataset.player)};tr.querySelectorAll("[data-k]").forEach(function(el){var k=el.dataset.k;o[k]=(k==="role"||k==="position")?el.value:(el.value===""?null:Number(el.value));});["minutes","goals","assists","yellow","red"].forEach(function(k){if(o[k]!==null)o[k]=Math.max(0,Math.trunc(o[k]||0));});if(o.minutes!==null)o.minutes=Math.min(150,o.minutes);if(o.rating!==null)o.rating=Math.min(10,o.rating);return o;});
+var next={formation:val("formation"),coach:val("coach").trim(),captain:val("captain")?Number(val("captain")):null,objective:val("objective").trim(),tactics:val("tactics").trim(),report:val("report").trim(),events:val("events").trim(),players:data,updatedAt:new Date().toISOString()};
+var all=get("matchDetails",{});all[id]=next;if(!set("matchDetails",all))return;dlg.close();
+var msg=document.createElement("p");msg.className="note";msg.setAttribute("role","status");msg.textContent="Feuille enregistrée : "+data.filter(function(x){return x.role==="Titulaire";}).length+" titulaire(s), "+data.filter(function(x){return x.role==="Remplaçant";}).length+" remplaçant(s).";var main=document.querySelector("main");if(main)main.prepend(msg);
+});
+dlg.showModal();
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
+})();
