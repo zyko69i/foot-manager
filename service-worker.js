@@ -1,6 +1,6 @@
 "use strict";
 const CACHE = "mimouni-soccer-stats-v5";
-const FILES = ["./","./index.html","./categories.html","./matchs.html","./presences.html","./convocations.html","./documents.html","./terrains.html","./contacts.html","./parametres.html","./export.html","./style.css","./common.js","./manifest.webmanifest","./favicon.svg"];
+const FILES = ["./","./index.html","./categories.html","./progression.html","./matchs.html","./presences.html","./convocations.html","./documents.html","./terrains.html","./contacts.html","./parametres.html","./export.html","./style.css","./common.js","./manifest.webmanifest","./favicon.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
   self.skipWaiting();
